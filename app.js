@@ -4,6 +4,10 @@
   const GOOGLE_SETTINGS_KEY = "aaravis-yum-box-google-settings-v1";
   const clone = (value) => JSON.parse(JSON.stringify(value));
   const hasSavedSheet = Boolean(localStorage.getItem(GOOGLE_SETTINGS_KEY));
+  const isLocalServer = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+  const apiUrl = (route) => isLocalServer
+    ? `/api/${route}`
+    : `/api.php?route=${encodeURIComponent(route)}`;
   let state = null;
   let googleSettings = { sheetId: "" };
   try {
@@ -70,7 +74,7 @@
     const button = get("logout-button");
     button.disabled = true;
     try {
-      const response = await fetch("/api/auth/logout", { method: "POST" });
+      const response = await fetch(apiUrl("auth/logout"), { method: "POST" });
       if (!response.ok) throw new Error(`Logout returned HTTP ${response.status}.`);
       state = null;
       sessionExpiresAt = 0;
@@ -107,11 +111,17 @@
   }
 
   function startGoogleLogin() {
-    window.location.assign("/api/auth/login");
+    window.location.assign(apiUrl("auth/login"));
   }
 
   async function sheetsRequest(path, options = {}) {
-    const response = await fetch(`/api/sheets/v4/spreadsheets/${encodeURIComponent(googleSettings.sheetId)}${path}`, {
+    const queryIndex = path.indexOf("?");
+    const routePath = queryIndex < 0 ? path : path.slice(0, queryIndex);
+    const query = queryIndex < 0 ? "" : `&${path.slice(queryIndex + 1)}`;
+    const endpoint = isLocalServer
+      ? `/api/sheets/v4/spreadsheets/${encodeURIComponent(googleSettings.sheetId)}${path}`
+      : `${apiUrl(`sheets/v4/spreadsheets/${encodeURIComponent(googleSettings.sheetId)}${routePath}`)}${query}`;
+    const response = await fetch(endpoint, {
       ...options,
       headers: { ...(options.headers || {}) }
     });
@@ -782,7 +792,7 @@
       window.history.replaceState({}, document.title, window.location.pathname);
     }
     try {
-      const response = await fetch("/api/auth/session");
+      const response = await fetch(apiUrl("auth/session"));
       if (!response.ok) throw new Error(`Session check returned HTTP ${response.status}.`);
       const session = await response.json();
       get("oauth-setup-note").classList.toggle("hidden", Boolean(session.configured));
