@@ -22,6 +22,7 @@
         <div class="login-warning"><span>🔒</span><span>Google asks you to authorize this app to read and edit Sheets you can access. Your sheet is not shared with another person. If its link is public, change Google Sheets sharing to <strong>Restricted</strong>.</span></div>
         <div id="login-error" class="form-error hidden" role="alert"></div>
         <button class="button button-primary login-submit" type="button" id="login-google-button"><span class="google-g login-google-g">G</span> Sign in with Google</button>
+        <p id="hosted-oauth-help" class="oauth-setup-note hidden">If Google reports <strong>redirect_uri_mismatch</strong>, add this exact authorized redirect URI in Google Cloud: <code>https://aaravisumbx.themidatouche.com/oauth-callback.php</code></p>
         <p id="oauth-setup-note" class="oauth-setup-note hidden">Google sign-in needs an OAuth client configured for this app.</p>
       </div>
       <form id="google-sheet-form" class="google-sheet-step hidden">

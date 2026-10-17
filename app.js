@@ -17,6 +17,7 @@
   }
   let sessionExpiresAt = 0;
   let googleAccountEmail = "";
+  let googleLoginPopup = null;
   let sheetRows = { inventory: {}, inventoryNext: 8, purchasesNext: 8, movementsNext: 5, payoutsNext: 8, expensesNext: 8 };
   let sheetIds = {};
   let expenseSheetTitle = "Employee payment and other expe";
@@ -111,7 +112,22 @@
   }
 
   function startGoogleLogin() {
-    window.location.assign(apiUrl("auth/login"));
+    if (isLocalServer) {
+      window.location.assign(apiUrl("auth/login"));
+      return;
+    }
+
+    const popup = window.open(
+      `${apiUrl("auth/login")}&popup=1`,
+      "yum-box-google-login",
+      "popup,width=520,height=680,resizable=yes,scrollbars=yes"
+    );
+    if (!popup) {
+      window.location.assign(apiUrl("auth/login"));
+      return;
+    }
+    googleLoginPopup = popup;
+    popup.focus();
   }
 
   async function sheetsRequest(path, options = {}) {
@@ -875,6 +891,17 @@
   get("google-dialog").addEventListener("click", (event) => {
     if (event.target === get("google-dialog")) get("google-dialog").close();
   });
+  window.addEventListener("message", (event) => {
+    if (event.origin !== window.location.origin
+      || event.source !== googleLoginPopup
+      || event.data?.type !== "yum-box-oauth") return;
+    googleLoginPopup = null;
+    if (event.data.error) {
+      updateLoginError(event.data.error);
+      return;
+    }
+    restoreGoogleSession();
+  });
   get("google-settings-form").addEventListener("submit", async (event) => {
     event.preventDefault();
     const sheetId = spreadsheetIdFromInput(get("google-sheet-id").value);
@@ -908,6 +935,7 @@
     }
   });
   get("login-sheet-id").value = googleSettings.sheetId;
+  get("hosted-oauth-help").classList.toggle("hidden", isLocalServer);
   updateConnectionUI(false);
   showLoginPage(true);
   const authError = new URLSearchParams(window.location.search).get("auth_error");

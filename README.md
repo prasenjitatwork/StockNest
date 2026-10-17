@@ -18,7 +18,7 @@ The local PowerShell server is only for running the app on your own computer. Fo
 
 1. Upload the app files, `api.php`, `oauth-callback.php`, `App_Data/google-oauth.example.php`, `App_Data/web.config`, and `App_Data/.htaccess` to the website root. Keep any hosting-provider `web.config` at the root unchanged. The access-control files inside `App_Data` protect the OAuth configuration and server-side session files.
 2. In `App_Data`, copy `google-oauth.example.php` to `google-oauth.php`. Edit the copy in the hosting file manager: enter your Google Web OAuth client secret and set `app_base_url` to `https://aaravisumbx.themidatouche.com` (or your site's HTTPS origin). Never commit or share `google-oauth.php`.
-3. In Google Cloud Console, add the hosted site origin under **Authorized JavaScript origins** and add `https://aaravisumbx.themidatouche.com/oauth-callback.php` under **Authorized redirect URIs**. Keep the localhost entries too if you also use the local app.
+3. In Google Cloud Console, add the hosted site origin under **Authorized JavaScript origins** and add this exact URL under **Authorized redirect URIs**: `https://aaravisumbx.themidatouche.com/oauth-callback.php`. It must match exactly; a different path or an `api.php?route=...` URL causes Google's `redirect_uri_mismatch` error. Keep the localhost entries too if you also use the local app.
 4. Reload the hosted site. Sign in with Google, then enter the Google Sheet link. If sign-in fails, check that PHP cURL is enabled and that the PHP process can create/write `App_Data/yum-box-sessions`.
 
 ## Sign in and connect your Google Sheet
@@ -29,7 +29,7 @@ The local PowerShell server is only for running the app on your own computer. Fo
 4. Start `run-app.ps1` and open [http://localhost:8765](http://localhost:8765). Choose **Sign in with Google**, then authorize the account that can edit the workbook.
 5. On first use, paste your Google Sheet link and choose **Open my sheet**. The dashboard appears only after the sheet loads successfully.
 
-Google redirects back to the app after sign-in. The local server holds refresh tokens in memory; hosted PHP stores them in server-side session files under `App_Data`. Both use an HttpOnly session cookie for up to one day; after a browser refresh, the app loads the sheet again from Google without an additional sign-in. **Log out** revokes the Google token and ends the session immediately. On local use, restarting the PowerShell server clears sessions; hosted session files are managed by PHP.
+On the hosted site, Google sign-in opens a popup so you can select the Google account; when authorization finishes, the popup closes and the app continues. Google must have the exact hosted callback URL registered above. The local server uses a full-page sign-in redirect. It holds refresh tokens in memory; hosted PHP stores them in server-side session files under `App_Data`. Both use an HttpOnly session cookie for up to one day; after a browser refresh, the app loads the sheet again from Google without an additional sign-in. **Log out** revokes the Google token and ends the session immediately. On local use, restarting the PowerShell server clears sessions; hosted session files are managed by PHP.
 
 If Google shows **Error 401: invalid_client** or **no registered origin**, open the OAuth client matching the ID in `google-config.js` and check that the correct localhost or hosted origin and redirect URI are registered. Save the change, wait a few minutes, and reload the app.
 

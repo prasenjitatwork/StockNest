@@ -13,8 +13,29 @@ function respond_json(int $status, array $body)
     exit;
 }
 
-function redirect_with_error(string $message, string $baseUrl)
+function finish_oauth_popup(string $baseUrl, ?string $error = null)
 {
+    $origin = json_encode($baseUrl, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+    $message = json_encode($error, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+    $fallback = json_encode(
+        $baseUrl . ($error !== null ? '/?auth_error=' . rawurlencode($error) : '/'),
+        JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+    );
+    header('Cache-Control: no-store');
+    header('Content-Type: text/html; charset=utf-8');
+    echo '<!doctype html><meta charset="utf-8"><title>Google sign-in</title><p>Sign-in complete. You may close this window.</p><script>'
+        . 'const appOrigin=' . $origin . ';'
+        . 'if(window.opener&&!window.opener.closed){window.opener.postMessage({type:"yum-box-oauth",error:' . $message . '},appOrigin);window.close();}'
+        . 'else{window.location.replace(' . $fallback . ');}'
+        . '</script>';
+    exit;
+}
+
+function redirect_with_error(string $message, string $baseUrl, bool $popup = false)
+{
+    if ($popup && $baseUrl !== '') {
+        finish_oauth_popup($baseUrl, $message);
+    }
     header('Cache-Control: no-store');
     header('Location: ' . $baseUrl . '/?auth_error=' . rawurlencode($message), true, 302);
     exit;
@@ -197,6 +218,7 @@ try {
         $state = bin2hex(random_bytes(32));
         $_SESSION['oauth_state'] = $state;
         $_SESSION['oauth_state_created_at'] = time();
+        $_SESSION['oauth_popup'] = ($_GET['popup'] ?? '') === '1';
         $authorizationUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' . http_build_query([
             'client_id' => $config['client_id'],
             'redirect_uri' => $config['redirect_uri'],
@@ -213,8 +235,10 @@ try {
     }
 
     if ($route === 'oauth/callback' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+        $popup = !empty($_SESSION['oauth_popup']);
+        unset($_SESSION['oauth_popup']);
         if (isset($_GET['error'])) {
-            redirect_with_error('Google sign-in failed: ' . (string) $_GET['error'], $config['base_url']);
+            redirect_with_error('Google sign-in failed: ' . (string) $_GET['error'], $config['base_url'], $popup);
         }
 
         $providedState = $_GET['state'] ?? '';
@@ -226,12 +250,12 @@ try {
             || $savedState === ''
             || !hash_equals($savedState, $providedState)
             || $stateCreatedAt < time() - 600) {
-            redirect_with_error('Google sign-in expired or its state could not be verified. Start sign-in again.', $config['base_url']);
+            redirect_with_error('Google sign-in expired or its state could not be verified. Start sign-in again.', $config['base_url'], $popup);
         }
 
         $code = $_GET['code'] ?? '';
         if (!is_string($code) || $code === '') {
-            redirect_with_error('Google did not return an authorization code. Start sign-in again.', $config['base_url']);
+            redirect_with_error('Google did not return an authorization code. Start sign-in again.', $config['base_url'], $popup);
         }
         $tokenResponse = post_google_form('https://oauth2.googleapis.com/token', [
             'code' => $code,
@@ -242,11 +266,11 @@ try {
         ]);
         if ($tokenResponse['status'] < 200 || $tokenResponse['status'] >= 300) {
             $message = $tokenResponse['body']['error_description'] ?? $tokenResponse['body']['error'] ?? 'Google rejected the sign-in request.';
-            redirect_with_error('Google sign-in failed: ' . (string) $message, $config['base_url']);
+            redirect_with_error('Google sign-in failed: ' . (string) $message, $config['base_url'], $popup);
         }
         $token = $tokenResponse['body'];
         if (empty($token['access_token']) || empty($token['refresh_token'])) {
-            redirect_with_error('Google did not issue a refresh token. Remove this app in your Google Account settings, then sign in again.', $config['base_url']);
+            redirect_with_error('Google did not issue a refresh token. Remove this app in your Google Account settings, then sign in again.', $config['base_url'], $popup);
         }
 
         $profileResponse = request_json('https://openidconnect.googleapis.com/v1/userinfo', 'GET', null, [
@@ -255,7 +279,7 @@ try {
         if ($profileResponse['status'] < 200 || $profileResponse['status'] >= 300
             || empty($profileResponse['body']['email'])
             || empty($profileResponse['body']['email_verified'])) {
-            redirect_with_error('Google could not verify the signed-in account. Start sign-in again.', $config['base_url']);
+            redirect_with_error('Google could not verify the signed-in account. Start sign-in again.', $config['base_url'], $popup);
         }
 
         session_regenerate_id(true);
@@ -264,6 +288,9 @@ try {
         $_SESSION['refresh_token'] = $token['refresh_token'];
         $_SESSION['email'] = $profileResponse['body']['email'];
         $_SESSION['expires_at'] = time() + SESSION_LIFETIME;
+        if ($popup) {
+            finish_oauth_popup($config['base_url']);
+        }
         header('Cache-Control: no-store');
         header('Location: ' . $config['base_url'] . '/', true, 302);
         exit;
@@ -383,10 +410,11 @@ try {
 } catch (Throwable $error) {
     error_log('Aaravi Yum Box API error: ' . $error->getMessage());
     if (($route ?? '') === 'oauth/callback') {
-        redirect_with_error(
-            $error->getMessage(),
-            isset($config['base_url']) ? $config['base_url'] : ''
-        );
+        if (!empty($_SESSION['oauth_popup']) && isset($config['base_url'])) {
+            unset($_SESSION['oauth_popup']);
+            finish_oauth_popup($config['base_url'], $error->getMessage());
+        }
+        redirect_with_error($error->getMessage(), isset($config['base_url']) ? $config['base_url'] : '');
     }
     respond_json(500, ['error' => ['message' => $error->getMessage()]]);
 }
