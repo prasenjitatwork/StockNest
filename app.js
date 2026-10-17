@@ -29,7 +29,10 @@
   }).format(Number(amount) || 0);
   const number = (amount) => new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 }).format(Number(amount) || 0);
   const dateLabel = (date) => date ? new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(`${date}T00:00:00`)) : "—";
-  const today = () => new Date().toISOString().slice(0, 10);
+  const today = () => {
+    const date = new Date();
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  };
   const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   })[char]);
@@ -37,6 +40,9 @@
     .sort((a, b) => String(b.entry.date).localeCompare(String(a.entry.date)) || b.index - a.index)
     .map(({ entry }) => entry);
   let inventoryFilter = "all";
+  let inventoryPage = 1;
+  let purchasePage = 1;
+  const tablePageSize = 10;
   let toastTimer;
 
   const get = (id) => document.getElementById(id);
@@ -471,9 +477,10 @@
     renderPurchases();
     renderFinance();
     get("nav-low-count").textContent = lowItems().length || "";
-    get("today-label").textContent = new Intl.DateTimeFormat("en-IN", {
+    get("today-label").textContent = `Today · ${new Intl.DateTimeFormat("en-IN", {
       weekday: "short", day: "numeric", month: "short", year: "numeric"
-    }).format(new Date());
+    }).format(new Date())}`;
+    get("today-label").dateTime = today();
   }
 
   function renderDashboard() {
@@ -516,20 +523,28 @@
       <div class="purchase-mini-row"><div class="purchase-mini-main"><strong>${escapeHtml(entry.item)}</strong><small>${escapeHtml(entry.vendor || "Vendor not set")} · ${dateLabel(entry.date)}</small></div><span class="activity-amount">${money(entry.cost)}</span></div>`).join("") || '<div class="empty-inline">No purchases recorded yet.</div>';
   }
 
-  function renderInventory() {
+  function filteredInventory() {
     const query = get("inventory-search").value.trim().toLowerCase();
-    const filtered = state.inventory.filter((item) => {
+    return state.inventory.filter((item) => {
       const matchesText = [item.name, item.category, item.subcategory, item.company].join(" ").toLowerCase().includes(query);
       const matchesFilter = inventoryFilter === "all"
         || (inventoryFilter === "low" && Number(item.stock) <= 2)
         || item.category === inventoryFilter;
       return matchesText && matchesFilter;
     }).sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  function renderInventory() {
+    const filtered = filteredInventory();
     get("inventory-result-count").textContent = `${number(filtered.length)} ${filtered.length === 1 ? "item" : "items"}`;
     get("filter-all-count").textContent = state.inventory.length;
     get("filter-low-count").textContent = lowItems().length;
     get("inventory-empty").classList.toggle("hidden", filtered.length > 0);
-    get("inventory-table").innerHTML = filtered.map((item) => {
+    const pageCount = Math.max(1, Math.ceil(filtered.length / tablePageSize));
+    inventoryPage = Math.min(inventoryPage, pageCount);
+    const start = (inventoryPage - 1) * tablePageSize;
+    const pageItems = filtered.slice(start, start + tablePageSize);
+    get("inventory-table").innerHTML = pageItems.map((item) => {
       const [label, status] = statusFor(item.stock);
       const icon = item.category === "Food" ? "✿" : "▤";
       return `<tr>
@@ -541,19 +556,182 @@
         <td><button class="row-action" data-adjust="${escapeHtml(item.name)}">Adjust</button></td>
       </tr>`;
     }).join("");
+    renderPagination("inventory-pagination", filtered.length, inventoryPage, (page) => {
+      inventoryPage = page;
+      renderInventory();
+    });
+  }
+
+  function filteredPurchases() {
+    const query = get("purchase-search").value.trim().toLowerCase();
+    return newestFirst(state.purchases).filter((entry) =>
+      [entry.item, entry.vendor, entry.category, entry.company].join(" ").toLowerCase().includes(query));
   }
 
   function renderPurchases() {
-    const query = get("purchase-search").value.trim().toLowerCase();
-    const matches = newestFirst(state.purchases).filter((entry) =>
-      [entry.item, entry.vendor, entry.category, entry.company].join(" ").toLowerCase().includes(query));
+    const matches = filteredPurchases();
     const units = state.purchases.reduce((sum, entry) => sum + Number(entry.quantity), 0);
     get("purchase-total").textContent = money(totalPurchases());
     get("purchase-entry-count").textContent = number(state.purchases.length);
     get("purchase-units").textContent = number(units);
     get("purchase-empty").classList.toggle("hidden", matches.length > 0);
-    get("purchase-table").innerHTML = matches.map((entry) => `
+    const pageCount = Math.max(1, Math.ceil(matches.length / tablePageSize));
+    purchasePage = Math.min(purchasePage, pageCount);
+    const start = (purchasePage - 1) * tablePageSize;
+    get("purchase-table").innerHTML = matches.slice(start, start + tablePageSize).map((entry) => `
       <tr><td>${dateLabel(entry.date)}</td><td><div class="item-name"><strong>${escapeHtml(entry.item)}</strong><small>${escapeHtml(entry.category)}</small></div></td><td>${escapeHtml(entry.vendor || "—")}</td><td class="stock-cell">${number(entry.quantity)}<small>units</small></td><td>${money(entry.unitCost)}</td><td class="stock-cell">${money(entry.cost)}</td></tr>`).join("");
+    renderPagination("purchase-pagination", matches.length, purchasePage, (page) => {
+      purchasePage = page;
+      renderPurchases();
+    });
+  }
+
+  function renderPagination(containerId, totalItems, currentPage, setPage) {
+    const container = get(containerId);
+    if (totalItems === 0) {
+      container.innerHTML = "";
+      container.classList.add("hidden");
+      return;
+    }
+    const pageCount = Math.ceil(totalItems / tablePageSize);
+    const firstItem = (currentPage - 1) * tablePageSize + 1;
+    const lastItem = Math.min(currentPage * tablePageSize, totalItems);
+    container.classList.remove("hidden");
+    container.innerHTML = `
+      <span class="pagination-summary">Showing ${number(firstItem)}–${number(lastItem)} of ${number(totalItems)}</span>
+      <div class="pagination-controls">
+        <button class="pagination-button" type="button" data-page="${currentPage - 1}" ${currentPage <= 1 ? "disabled" : ""} aria-label="Previous page">‹</button>
+        <span class="pagination-page">Page ${number(currentPage)} of ${number(pageCount)}</span>
+        <button class="pagination-button" type="button" data-page="${currentPage + 1}" ${currentPage >= pageCount ? "disabled" : ""} aria-label="Next page">›</button>
+      </div>`;
+    container.onclick = (event) => {
+      const button = event.target.closest("[data-page]");
+      if (!button || button.disabled) return;
+      setPage(Number(button.dataset.page));
+    };
+  }
+
+  function zipStored(files) {
+    const encoder = new TextEncoder();
+    const crcTable = Array.from({ length: 256 }, (_, index) => {
+      let value = index;
+      for (let bit = 0; bit < 8; bit += 1) value = value & 1 ? 0xedb88320 ^ (value >>> 1) : value >>> 1;
+      return value >>> 0;
+    });
+    const checksum = (bytes) => {
+      let value = 0xffffffff;
+      bytes.forEach((byte) => { value = crcTable[(value ^ byte) & 0xff] ^ (value >>> 8); });
+      return (value ^ 0xffffffff) >>> 0;
+    };
+    const write16 = (view, offset, value) => view.setUint16(offset, value, true);
+    const write32 = (view, offset, value) => view.setUint32(offset, value, true);
+    const localParts = [];
+    const centralParts = [];
+    let localOffset = 0;
+
+    files.forEach(({ name, content }) => {
+      const nameBytes = encoder.encode(name);
+      const data = encoder.encode(content);
+      const crc = checksum(data);
+      const localHeader = new Uint8Array(30 + nameBytes.length);
+      const localView = new DataView(localHeader.buffer);
+      write32(localView, 0, 0x04034b50);
+      write16(localView, 4, 20);
+      write16(localView, 10, 33);
+      write32(localView, 14, crc);
+      write32(localView, 18, data.length);
+      write32(localView, 22, data.length);
+      write16(localView, 26, nameBytes.length);
+      localHeader.set(nameBytes, 30);
+      localParts.push(localHeader, data);
+
+      const centralHeader = new Uint8Array(46 + nameBytes.length);
+      const centralView = new DataView(centralHeader.buffer);
+      write32(centralView, 0, 0x02014b50);
+      write16(centralView, 4, 20);
+      write16(centralView, 6, 20);
+      write16(centralView, 12, 33);
+      write32(centralView, 16, crc);
+      write32(centralView, 20, data.length);
+      write32(centralView, 24, data.length);
+      write16(centralView, 28, nameBytes.length);
+      write32(centralView, 42, localOffset);
+      centralHeader.set(nameBytes, 46);
+      centralParts.push(centralHeader);
+      localOffset += localHeader.length + data.length;
+    });
+
+    const centralSize = centralParts.reduce((total, part) => total + part.length, 0);
+    const end = new Uint8Array(22);
+    const endView = new DataView(end.buffer);
+    write32(endView, 0, 0x06054b50);
+    write16(endView, 8, files.length);
+    write16(endView, 10, files.length);
+    write32(endView, 12, centralSize);
+    write32(endView, 16, localOffset);
+    return new Blob([...localParts, ...centralParts, end], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  }
+
+  function createExcelWorkbook(sheetName, rows, currencyColumns = []) {
+    const xmlEscape = (value) => String(value ?? "").replace(/[&<>"']/g, (character) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;"
+    })[character]);
+    const columnName = (index) => {
+      let name = "";
+      for (let value = index + 1; value > 0; value = Math.floor((value - 1) / 26)) {
+        name = String.fromCharCode(65 + ((value - 1) % 26)) + name;
+      }
+      return name;
+    };
+    const columnWidths = rows[0].map((_, column) => Math.min(42, Math.max(12, ...rows.map((row) => String(row[column] ?? "").length + 2))));
+    const columnXml = columnWidths.map((width, index) => `<col min="${index + 1}" max="${index + 1}" width="${width}" customWidth="1"/>`).join("");
+    const rowXml = rows.map((row, rowIndex) => `<row r="${rowIndex + 1}">${row.map((value, column) => {
+      const reference = `${columnName(column)}${rowIndex + 1}`;
+      if (typeof value === "number" && Number.isFinite(value)) {
+        const style = rowIndex > 0 && currencyColumns.includes(column) ? ' s="2"' : "";
+        return `<c r="${reference}"${style}><v>${value}</v></c>`;
+      }
+      const style = rowIndex === 0 ? ' s="1"' : "";
+      return `<c r="${reference}" t="inlineStr"${style}><is><t xml:space="preserve">${xmlEscape(value)}</t></is></c>`;
+    }).join("")}</row>`).join("");
+    const lastColumn = columnName(rows[0].length - 1);
+    const lastRow = rows.length;
+    const files = [
+      { name: "[Content_Types].xml", content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>' },
+      { name: "_rels/.rels", content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>' },
+      { name: "xl/workbook.xml", content: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${xmlEscape(sheetName)}" sheetId="1" r:id="rId1"/></sheets></workbook>` },
+      { name: "xl/_rels/workbook.xml.rels", content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>' },
+      { name: "xl/styles.xml", content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="₹#,##0.00"/></numFmts><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><color rgb="FFFFFFFF"/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF315E4C"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="center"/></xf><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/></cellXfs></styleSheet>' },
+      { name: "xl/worksheets/sheet1.xml", content: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView showGridLines="0" workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="A2" sqref="A2"/></sheetView></sheetViews><cols>${columnXml}</cols><sheetData>${rowXml}</sheetData><autoFilter ref="A1:${lastColumn}${lastRow}"/></worksheet>` }
+    ];
+    return zipStored(files);
+  }
+
+  function downloadExcel(filename, sheetName, rows, currencyColumns = []) {
+    const url = URL.createObjectURL(createExcelWorkbook(sheetName, rows, currencyColumns));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function downloadInventoryExcel() {
+    const items = filteredInventory();
+    downloadExcel("inventory.xlsx", "Inventory", [
+      ["Item", "Category", "Sub-category", "Brand / Supplier", "On hand", "Unit", "Status"],
+      ...items.map((item) => [item.name, item.category, item.subcategory, item.company, Number(item.stock), item.unit, statusFor(item.stock)[0]])
+    ]);
+  }
+
+  function downloadPurchasesExcel() {
+    const purchases = filteredPurchases();
+    downloadExcel("purchases.xlsx", "Purchases", [
+      ["Date", "Item", "Category", "Vendor", "Company", "Quantity", "Unit cost (INR)", "Total (INR)"],
+      ...purchases.map((entry) => [entry.date, entry.item, entry.category, entry.vendor, entry.company, Number(entry.quantity), Math.round(Number(entry.unitCost) * 100) / 100, Math.round(Number(entry.cost) * 100) / 100])
+    ], [6, 7]);
   }
 
   function renderPayoutReport() {
@@ -795,6 +973,7 @@
         if (!item || !Number.isInteger(quantity) || quantity <= 0 || !Number.isFinite(cost) || cost < 0) return "Enter a valid item, whole-unit quantity, and non-negative cost.";
         const date = values.date || today();
         state.purchases.push({ date, category: item.category, item: item.name, packets: Number(values.packets) || 0, cost, quantity, unitCost: cost / quantity, expiry: values.expiry.trim(), vendor: values.vendor.trim(), company: item.company || "" });
+        purchasePage = 1;
         item.stock = Number(item.stock) + quantity;
         state.financials.purchases += cost;
         state.movements.push({ date, item: item.name, type: "in", quantity, staff: "Stockroom", notes: values.vendor.trim() ? `Purchase · ${values.vendor.trim()}` : "Purchase inward" });
@@ -861,6 +1040,7 @@
         if (values.subcategory === "__new__" && !subcategory) return "Enter the new sub-category name.";
         const item = { name, category: values.category, subcategory, unit: values.unit.trim() || "Unit", stock, company: values.company.trim() };
         state.inventory.push(item);
+        inventoryPage = 1;
         if (stock > 0) state.movements.push({ date: today(), item: name, type: "in", quantity: stock, staff: "Stockroom", notes: "Opening stock" });
         return "";
       }
@@ -1012,11 +1192,20 @@
   document.querySelectorAll("[data-open-purchase]").forEach((button) => button.addEventListener("click", openPurchase));
   document.querySelectorAll("[data-filter]").forEach((button) => button.addEventListener("click", () => {
     inventoryFilter = button.dataset.filter;
+    inventoryPage = 1;
     document.querySelectorAll("[data-filter]").forEach((tab) => tab.classList.toggle("active", tab === button));
     renderInventory();
   }));
-  get("inventory-search").addEventListener("input", renderInventory);
-  get("purchase-search").addEventListener("input", renderPurchases);
+  get("inventory-search").addEventListener("input", () => {
+    inventoryPage = 1;
+    renderInventory();
+  });
+  get("purchase-search").addEventListener("input", () => {
+    purchasePage = 1;
+    renderPurchases();
+  });
+  get("download-inventory").addEventListener("click", downloadInventoryExcel);
+  get("download-purchases").addEventListener("click", downloadPurchasesExcel);
   get("inventory-table").addEventListener("click", (event) => {
     const button = event.target.closest("[data-adjust]");
     if (button) openAdjustment(button.dataset.adjust);

@@ -41,10 +41,12 @@ Inventory, purchases, stock movements, payouts, and expenses are read from and w
 
 ## What’s included
 
-- Searchable inventory with low-stock and out-of-stock indicators.
+- Searchable inventory with low-stock and out-of-stock indicators, 10-row pagination, and interactive Excel export of all matching items.
 - Add inventory items with category-specific sub-category choices or create a new sub-category.
 - Stock adjustments that prevent stock from going below zero.
 - Purchase entry that updates stock, purchase totals, and movement history together.
+- Paginated purchase history with search and interactive Excel export of all matching purchases.
+- Current date displayed in the app's top bar, including on mobile.
 - Platform payout and operating expense entry, with a live profit-and-loss summary.
 - Monthly Payouts Summary matching the workbook's platform credits, purchase costs, operating expenses, total expenses, net profit/loss, and margin, with CSV export.
 - Use Google Sheets' **File → Make a copy** or **Download** options to back up workbook data.

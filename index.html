@@ -60,7 +60,7 @@
       <header class="topbar">
         <div class="mobile-brand"><span class="brand-mark">YB</span><strong>Aaravi's Yum Box</strong></div>
         <div class="breadcrumb"><span>Workspace</span><span class="breadcrumb-slash">/</span><strong id="breadcrumb-current">Overview</strong></div>
-        <div class="topbar-right"><span class="today-label" id="today-label"></span><button class="button button-secondary theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark theme" title="Switch to dark theme"><span id="theme-toggle-icon" aria-hidden="true">◐</span><span id="theme-toggle-label">Dark mode</span></button><button class="button button-secondary google-top-button" id="google-top-button">↗ <span>Connect sheet</span></button><button class="button button-primary top-add" id="quick-add">＋ <span>Record purchase</span></button></div>
+        <div class="topbar-right"><time class="today-label" id="today-label"></time><button class="button button-secondary theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark theme" title="Switch to dark theme"><span id="theme-toggle-icon" aria-hidden="true">◐</span><span id="theme-toggle-label">Dark mode</span></button><button class="button button-secondary google-top-button" id="google-top-button">↗ <span>Connect sheet</span></button><button class="button button-primary top-add" id="quick-add">＋ <span>Record purchase</span></button></div>
       </header>
 
       <section class="page-view active" id="page-dashboard">
@@ -104,9 +104,10 @@
           <div class="filter-tabs" role="group" aria-label="Filter inventory"><button class="filter-tab active" data-filter="all">All <span id="filter-all-count"></span></button><button class="filter-tab" data-filter="low">Low stock <span id="filter-low-count"></span></button><button class="filter-tab" data-filter="Food">Food</button><button class="filter-tab" data-filter="Packaging">Packaging</button></div>
         </div>
         <div class="panel inventory-panel">
-          <div class="table-heading"><div><strong id="inventory-result-count">All items</strong><span class="panel-caption">Stock levels reflect your latest workbook and changes.</span></div><button id="adjust-stock-button" class="button button-secondary button-small">↕ Adjust stock</button></div>
+          <div class="table-heading"><div><strong id="inventory-result-count">All items</strong><span class="panel-caption">Stock levels reflect your latest workbook and changes.</span></div><div class="table-heading-actions"><button class="button button-secondary button-small" id="download-inventory">Download Excel</button><button id="adjust-stock-button" class="button button-secondary button-small">↕ Adjust stock</button></div></div>
           <div class="table-scroll"><table><thead><tr><th>ITEM</th><th>CATEGORY</th><th>BRAND / SUPPLIER</th><th>ON HAND</th><th>STATUS</th><th></th></tr></thead><tbody id="inventory-table"></tbody></table></div>
           <div id="inventory-empty" class="empty-state hidden">No items match that search.</div>
+          <div class="table-pagination" id="inventory-pagination" aria-label="Inventory pages"></div>
         </div>
         <div class="inventory-note"><span>✦</span><span>“Low stock” means 2 units or fewer. Adjust this threshold mentally for each item's purchase unit.</span></div>
       </section>
@@ -119,9 +120,10 @@
           <article class="metric-card"><div class="metric-top"><span>Units received</span><span class="metric-icon mint">＋</span></div><div class="metric-value" id="purchase-units">—</div><div class="metric-foot">Total units across logged inward</div></article>
         </div>
         <div class="panel inventory-panel">
-          <div class="table-heading"><div><strong>Purchase history</strong><span class="panel-caption">A line-by-line view of your workbook's inward log.</span></div><div class="search-box search-box-small"><span>⌕</span><input id="purchase-search" type="search" placeholder="Search purchases..." aria-label="Search purchases"></div></div>
+          <div class="table-heading"><div><strong>Purchase history</strong><span class="panel-caption">A line-by-line view of your workbook's inward log.</span></div><div class="table-heading-actions"><div class="search-box search-box-small"><span>⌕</span><input id="purchase-search" type="search" placeholder="Search purchases..." aria-label="Search purchases"></div><button class="button button-secondary button-small" id="download-purchases">Download Excel</button></div></div>
           <div class="table-scroll"><table><thead><tr><th>DATE</th><th>ITEM</th><th>VENDOR</th><th>QUANTITY</th><th>UNIT COST</th><th>TOTAL</th></tr></thead><tbody id="purchase-table"></tbody></table></div>
           <div id="purchase-empty" class="empty-state hidden">No purchases match that search.</div>
+          <div class="table-pagination" id="purchase-pagination" aria-label="Purchase pages"></div>
         </div>
       </section>
 
