@@ -615,26 +615,27 @@
     const totalRow = get("payout-report-months").querySelector(".report-total-row");
     if (!totalRow) return;
     const csvCell = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+    const csvAmount = (value) => (Number(value) || 0).toFixed(2);
     const rows = [
       ["Monthly Payouts Summary"],
-      ["Total revenue (INR)", sumAmount(state.payouts, "amount")],
-      ["Total purchases (INR)", sumAmount(state.purchases, "cost")],
-      ["Operating expenses (INR)", totalExpenses()],
-      ["Total expenses (INR)", sumAmount(state.purchases, "cost") + totalExpenses()],
-      ["Net profit / (loss) (INR)", sumAmount(state.payouts, "amount") - sumAmount(state.purchases, "cost") - totalExpenses()],
+      ["Total revenue (INR)", csvAmount(sumAmount(state.payouts, "amount"))],
+      ["Total purchases (INR)", csvAmount(sumAmount(state.purchases, "cost"))],
+      ["Operating expenses (INR)", csvAmount(totalExpenses())],
+      ["Total expenses (INR)", csvAmount(sumAmount(state.purchases, "cost") + totalExpenses())],
+      ["Net profit / (loss) (INR)", csvAmount(sumAmount(state.payouts, "amount") - sumAmount(state.purchases, "cost") - totalExpenses())],
       [],
       ["Month", "Swiggy", "Zomato", "Magicpin", "Ownly", "Total Credit", "Purchases & Inward Log", "Employee & Other Expenses", "Total Expenses", "Net Profit / Loss", "Net Margin %"],
       ...[...get("payout-report-months").querySelectorAll("tr:not(.report-total-row)")].map((row) => [
         row.cells[0].textContent.trim(),
         ...[...row.cells].slice(1).map((cell, index) => index === 9
           ? `${(Number(cell.dataset.value) * 100).toFixed(1)}%`
-          : cell.dataset.value)
+          : csvAmount(cell.dataset.value))
       ]),
       [
         totalRow.cells[0].textContent.trim(),
         ...[...totalRow.cells].slice(1).map((cell, index) => index === 9
           ? `${(Number(cell.dataset.value) * 100).toFixed(1)}%`
-          : cell.dataset.value)
+          : csvAmount(cell.dataset.value))
       ]
     ];
     const csv = `\uFEFF${rows.map((row) => row.map(csvCell).join(",")).join("\r\n")}`;
