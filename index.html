@@ -140,19 +140,18 @@
         <section class="payout-report" aria-labelledby="payout-report-title">
           <div class="panel payout-report-panel">
             <div class="table-heading payout-report-heading">
-              <div><p class="eyebrow">PAYOUT REPORT</p><strong id="payout-report-title">Monthly Payouts Summary</strong><span class="panel-caption">Platform settlements recorded for the selected month.</span></div>
-              <div class="payout-report-actions"><label class="month-picker-label" for="payout-report-month">Month</label><input id="payout-report-month" type="month" aria-label="Select payout report month" required><button class="button button-secondary button-small" id="export-payout-report">Download CSV</button></div>
+              <div><p class="eyebrow">MONTHLY RECONCILIATION</p><strong id="payout-report-title">Monthly Payouts Summary</strong><span class="panel-caption">Platform credits compared with purchases, expenses, and net profit or loss.</span></div>
+              <button class="button button-secondary button-small" id="export-payout-report">Download CSV</button>
             </div>
             <div class="metric-grid payout-report-metrics">
-              <article class="metric-card"><div class="metric-top"><span>Total payouts</span><span class="metric-icon lilac">₹</span></div><div class="metric-value" id="monthly-payout-total">—</div><div class="metric-foot"><span id="monthly-payout-count">0</span> settlements</div></article>
-              <article class="metric-card"><div class="metric-top"><span>Credited</span><span class="metric-icon mint">✓</span></div><div class="metric-value" id="monthly-payout-credited">—</div><div class="metric-foot"><span id="monthly-payout-credited-count">0</span> credited settlements</div></article>
-              <article class="metric-card"><div class="metric-top"><span>Pending</span><span class="metric-icon peach">…</span></div><div class="metric-value" id="monthly-payout-pending">—</div><div class="metric-foot"><span id="monthly-payout-pending-count">0</span> pending settlements</div></article>
+              <article class="metric-card"><div class="metric-top"><span>Total revenue</span><span class="metric-icon mint">₹</span></div><div class="metric-value" id="monthly-report-revenue">—</div><div class="metric-foot">All platform credits</div></article>
+              <article class="metric-card"><div class="metric-top"><span>Total purchases</span><span class="metric-icon lilac">↙</span></div><div class="metric-value" id="monthly-report-purchases">—</div><div class="metric-foot">Stock &amp; inward costs</div></article>
+              <article class="metric-card"><div class="metric-top"><span>Operating expenses</span><span class="metric-icon peach">−</span></div><div class="metric-value" id="monthly-report-operating-expenses">—</div><div class="metric-foot">Employee &amp; other expenses</div></article>
+              <article class="metric-card"><div class="metric-top"><span>Total expenses</span><span class="metric-icon butter">＝</span></div><div class="metric-value" id="monthly-report-total-expenses">—</div><div class="metric-foot">Purchases + operating costs</div></article>
+              <article class="metric-card"><div class="metric-top"><span>Net profit / (loss)</span><span class="metric-icon mint">↗</span></div><div class="metric-value" id="monthly-report-net-profit">—</div><div class="metric-foot">Revenue less total expenses</div></article>
             </div>
-            <div class="payout-report-subheading"><strong>By platform</strong><span class="panel-caption" id="payout-report-month-label"></span></div>
-            <div class="table-scroll"><table class="payout-report-platform-table"><thead><tr><th>PLATFORM</th><th>SETTLEMENTS</th><th>CREDITED</th><th>PENDING</th><th class="align-right">TOTAL</th></tr></thead><tbody id="payout-report-platforms"></tbody></table></div>
-            <div class="empty-state hidden" id="payout-report-empty">No payouts recorded for this month.</div>
-            <div class="payout-report-subheading"><strong>Payout details</strong></div>
-            <div class="table-scroll"><table><thead><tr><th>DATE</th><th>PLATFORM</th><th>STATUS</th><th>REFERENCE</th><th class="align-right">AMOUNT</th></tr></thead><tbody id="payout-report-table"></tbody></table></div>
+            <div class="table-scroll"><table class="payout-report-table"><thead><tr><th>MONTH</th><th>SWIGGY</th><th>ZOMATO</th><th>MAGICPIN</th><th>OWNLY</th><th>TOTAL CREDIT</th><th>PURCHASES &amp; INWARD LOG</th><th>EMPLOYEE &amp; OTHER EXPENSES</th><th>TOTAL EXPENSES</th><th>NET PROFIT / LOSS</th><th>NET MARGIN %</th></tr></thead><tbody id="payout-report-months"></tbody></table></div>
+            <div class="empty-state hidden" id="payout-report-empty">No payout, purchase, or operating expense records are available for this report.</div>
           </div>
         </section>
         <div class="panel transaction-panel">

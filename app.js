@@ -34,10 +34,10 @@
     .sort((a, b) => String(b.entry.date).localeCompare(String(a.entry.date)) || b.index - a.index)
     .map(({ entry }) => entry);
   let inventoryFilter = "all";
-  let payoutReportMonth = "";
   let toastTimer;
 
   const get = (id) => document.getElementById(id);
+  const sumAmount = (entries, key) => entries.reduce((sum, entry) => sum + (Number(entry[key]) || 0), 0);
   const totalExpenses = () => state.expenses.reduce((sum, entry) => sum + Number(entry.amount), 0);
   const totalRevenue = () => state.financials.revenue;
   const totalPurchases = () => state.financials.purchases;
@@ -545,77 +545,107 @@
   }
 
   function renderPayoutReport() {
-    const monthInput = get("payout-report-month");
-    const latestMonth = state.payouts.map((entry) => String(entry.date || "").slice(0, 7))
-      .filter((month) => /^\d{4}-\d{2}$/.test(month))
-      .sort()
-      .pop();
-    if (!/^\d{4}-\d{2}$/.test(payoutReportMonth)) payoutReportMonth = latestMonth || today().slice(0, 7);
-    monthInput.value = payoutReportMonth;
-    const monthLabel = new Intl.DateTimeFormat("en-IN", { month: "long", year: "numeric" })
-      .format(new Date(`${payoutReportMonth}-01T00:00:00`));
-    const payouts = newestFirst(state.payouts.filter((entry) => String(entry.date || "").startsWith(`${payoutReportMonth}-`)));
-    const credited = payouts.filter((entry) => /credited/i.test(entry.status));
-    const pending = payouts.filter((entry) => /pending/i.test(entry.status));
-    const platforms = new Map();
-    payouts.forEach((entry) => {
-      const name = entry.platform || "Other";
-      const totals = platforms.get(name) || { count: 0, total: 0, credited: 0, pending: 0 };
-      totals.count += 1;
-      totals.total += Number(entry.amount);
-      if (/credited/i.test(entry.status)) totals.credited += Number(entry.amount);
-      if (/pending/i.test(entry.status)) totals.pending += Number(entry.amount);
-      platforms.set(name, totals);
+    const monthly = new Map();
+    const getMonth = (date) => {
+      const match = String(date || "").match(/^(\d{4})-(\d{2})-/);
+      return match ? `${match[1]}-${match[2]}` : "";
+    };
+    const getTotals = (month) => {
+      if (!monthly.has(month)) monthly.set(month, { Swiggy: 0, Zomato: 0, Magicpin: 0, Ownly: 0, revenue: 0, purchases: 0, operatingExpenses: 0 });
+      return monthly.get(month);
+    };
+    state.payouts.forEach((entry) => {
+      const month = getMonth(entry.date);
+      if (!month) return;
+      const totals = getTotals(month);
+      const amount = Number(entry.amount) || 0;
+      totals.revenue += amount;
+      const platform = Object.keys(totals).find((name) => name.toLowerCase() === String(entry.platform || "").toLowerCase());
+      if (platform) totals[platform] += amount;
     });
-    get("monthly-payout-total").textContent = money(sumPayoutAmounts(payouts));
-    get("monthly-payout-count").textContent = number(payouts.length);
-    get("monthly-payout-credited").textContent = money(sumPayoutAmounts(credited));
-    get("monthly-payout-credited-count").textContent = number(credited.length);
-    get("monthly-payout-pending").textContent = money(sumPayoutAmounts(pending));
-    get("monthly-payout-pending-count").textContent = number(pending.length);
-    get("payout-report-month-label").textContent = monthLabel;
-    get("payout-report-empty").classList.toggle("hidden", payouts.length > 0);
-    get("export-payout-report").disabled = payouts.length === 0;
-    get("payout-report-platforms").innerHTML = [...platforms.entries()]
-      .sort((a, b) => b[1].total - a[1].total || a[0].localeCompare(b[0]))
-      .map(([name, totals]) => `<tr><td>${escapeHtml(name)}</td><td>${number(totals.count)}</td><td>${money(totals.credited)}</td><td>${money(totals.pending)}</td><td class="align-right stock-cell">${money(totals.total)}</td></tr>`)
-      .join("");
-    get("payout-report-table").innerHTML = payouts.map((entry) => `
-      <tr><td>${dateLabel(entry.date)}</td><td>${escapeHtml(entry.platform || "—")}</td><td>${escapeHtml(entry.status || "Recorded")}</td><td>${escapeHtml(entry.reference || "—")}</td><td class="align-right stock-cell">${money(entry.amount)}</td></tr>`).join("");
+    state.purchases.forEach((entry) => {
+      const month = getMonth(entry.date);
+      if (month) getTotals(month).purchases += Number(entry.cost) || 0;
+    });
+    state.expenses.forEach((entry) => {
+      const month = getMonth(entry.date);
+      if (month) getTotals(month).operatingExpenses += Number(entry.amount) || 0;
+    });
+    const monthKeys = [...monthly.keys()].sort();
+    if (monthKeys.length) {
+      const cursor = new Date(`${monthKeys[0]}-01T00:00:00`);
+      const lastMonth = monthKeys[monthKeys.length - 1];
+      while (`${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}` <= lastMonth) {
+        getTotals(`${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}`);
+        cursor.setMonth(cursor.getMonth() + 1);
+      }
+    }
+    const months = [...monthly.entries()].sort(([a], [b]) => a.localeCompare(b));
+    const totals = { Swiggy: 0, Zomato: 0, Magicpin: 0, Ownly: 0, revenue: 0, purchases: 0, operatingExpenses: 0 };
+    months.forEach(([, month]) => Object.keys(totals).forEach((key) => { totals[key] += month[key]; }));
+    const totalExpenses = totals.purchases + totals.operatingExpenses;
+    const netProfit = totals.revenue - totalExpenses;
+    const margin = (revenue, profit) => revenue ? profit / revenue : 0;
+    const monthLabel = (month) => new Intl.DateTimeFormat("en-IN", { month: "short", year: "numeric" })
+      .format(new Date(`${month}-01T00:00:00`));
+    const valueCells = (month) => {
+      const expenses = month.purchases + month.operatingExpenses;
+      const profit = month.revenue - expenses;
+      return [
+        month.Swiggy, month.Zomato, month.Magicpin, month.Ownly, month.revenue,
+        month.purchases, month.operatingExpenses, expenses, profit, margin(month.revenue, profit)
+      ];
+    };
+    const reportRows = months.map(([month, values]) => ({ month: monthLabel(month), cells: valueCells(values) }));
+    const totalCells = valueCells(totals);
+    get("monthly-report-revenue").textContent = money(totals.revenue);
+    get("monthly-report-purchases").textContent = money(totals.purchases);
+    get("monthly-report-operating-expenses").textContent = money(totals.operatingExpenses);
+    get("monthly-report-total-expenses").textContent = money(totalExpenses);
+    get("monthly-report-net-profit").textContent = money(netProfit);
+    get("payout-report-empty").classList.toggle("hidden", months.length > 0);
+    get("export-payout-report").disabled = months.length === 0;
+    const formatCells = (cells) => cells.map((value, index) => `<td class="align-right" data-value="${value}">${index === 9 ? `${(value * 100).toFixed(1)}%` : money(value)}</td>`).join("");
+    get("payout-report-months").innerHTML = reportRows.map((row) => `
+      <tr><td>${row.month}</td>${formatCells(row.cells)}</tr>`).join("")
+      + (months.length ? `<tr class="report-total-row"><td>Total</td>${formatCells(totalCells)}</tr>` : "");
   }
 
   function downloadPayoutReport() {
-    const month = get("payout-report-month").value;
-    const payouts = newestFirst(state.payouts.filter((entry) => String(entry.date || "").startsWith(`${month}-`)));
-    if (!payouts.length) return;
-    const credited = payouts.filter((entry) => /credited/i.test(entry.status));
-    const pending = payouts.filter((entry) => /pending/i.test(entry.status));
+    const totalRow = get("payout-report-months").querySelector(".report-total-row");
+    if (!totalRow) return;
     const csvCell = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
-    const monthLabel = new Intl.DateTimeFormat("en-IN", { month: "long", year: "numeric" })
-      .format(new Date(`${month}-01T00:00:00`));
     const rows = [
       ["Monthly Payouts Summary"],
-      ["Month", monthLabel],
-      ["Total payouts", sumPayoutAmounts(payouts)],
-      ["Credited", sumPayoutAmounts(credited)],
-      ["Pending", sumPayoutAmounts(pending)],
+      ["Total revenue (INR)", sumAmount(state.payouts, "amount")],
+      ["Total purchases (INR)", sumAmount(state.purchases, "cost")],
+      ["Operating expenses (INR)", totalExpenses()],
+      ["Total expenses (INR)", sumAmount(state.purchases, "cost") + totalExpenses()],
+      ["Net profit / (loss) (INR)", sumAmount(state.payouts, "amount") - sumAmount(state.purchases, "cost") - totalExpenses()],
       [],
-      ["Date", "Platform", "Status", "Reference", "Amount (INR)", "Notes"],
-      ...payouts.map((entry) => [entry.date, entry.platform, entry.status, entry.reference, Number(entry.amount), entry.notes])
+      ["Month", "Swiggy", "Zomato", "Magicpin", "Ownly", "Total Credit", "Purchases & Inward Log", "Employee & Other Expenses", "Total Expenses", "Net Profit / Loss", "Net Margin %"],
+      ...[...get("payout-report-months").querySelectorAll("tr:not(.report-total-row)")].map((row) => [
+        row.cells[0].textContent.trim(),
+        ...[...row.cells].slice(1).map((cell, index) => index === 9
+          ? `${(Number(cell.dataset.value) * 100).toFixed(1)}%`
+          : cell.dataset.value)
+      ]),
+      [
+        totalRow.cells[0].textContent.trim(),
+        ...[...totalRow.cells].slice(1).map((cell, index) => index === 9
+          ? `${(Number(cell.dataset.value) * 100).toFixed(1)}%`
+          : cell.dataset.value)
+      ]
     ];
     const csv = `\uFEFF${rows.map((row) => row.map(csvCell).join(",")).join("\r\n")}`;
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
     const link = document.createElement("a");
     link.href = url;
-    link.download = `monthly-payouts-${month}.csv`;
+    link.download = "monthly-payouts-summary.csv";
     document.body.appendChild(link);
     link.click();
     link.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }
-
-  function sumPayoutAmounts(entries) {
-    return entries.reduce((total, entry) => total + Number(entry.amount), 0);
   }
 
   function renderFinance() {
@@ -983,10 +1013,6 @@
   get("adjust-stock-button").addEventListener("click", () => openAdjustment());
   get("add-payout-button").addEventListener("click", openPayout);
   get("add-expense-button").addEventListener("click", openExpense);
-  get("payout-report-month").addEventListener("change", (event) => {
-    payoutReportMonth = event.target.value;
-    renderPayoutReport();
-  });
   get("export-payout-report").addEventListener("click", downloadPayoutReport);
   get("dialog-close").addEventListener("click", () => get("app-dialog").close());
   get("dialog-cancel").addEventListener("click", () => get("app-dialog").close());
