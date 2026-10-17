@@ -46,6 +46,7 @@ Inventory, purchases, stock movements, payouts, and expenses are read from and w
 - Stock adjustments that prevent stock from going below zero.
 - Purchase entry that updates stock, purchase totals, and movement history together.
 - Platform payout and operating expense entry, with a live profit-and-loss summary.
+- Monthly payout report with credited/pending totals, platform breakdown, and CSV export.
 - Use Google Sheets' **File → Make a copy** or **Download** options to back up workbook data.
 
 Stock adjustments, new items, purchases, payouts, and expenses are written to their corresponding workbook tabs. The workbook's revenue summary includes a payout that its log marks as pending; the app calls this out in the finance view.

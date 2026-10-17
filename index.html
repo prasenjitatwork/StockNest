@@ -137,6 +137,24 @@
           <article class="panel"><div class="panel-heading"><div><p class="eyebrow">REVENUE</p><h2>Platform settlements</h2></div><button class="text-button" id="add-payout-button">＋ Add settlement</button></div><div id="finance-platforms" class="finance-platforms"></div><div class="panel-footnote" id="pending-payout-note"></div></article>
           <article class="panel"><div class="panel-heading"><div><p class="eyebrow">OUTGOINGS</p><h2>Where the money goes</h2></div><button class="text-button" id="add-expense-button">＋ Add expense</button></div><div id="expense-breakdown" class="expense-breakdown"></div></article>
         </div>
+        <section class="payout-report" aria-labelledby="payout-report-title">
+          <div class="panel payout-report-panel">
+            <div class="table-heading payout-report-heading">
+              <div><p class="eyebrow">PAYOUT REPORT</p><strong id="payout-report-title">Monthly Payouts Summary</strong><span class="panel-caption">Platform settlements recorded for the selected month.</span></div>
+              <div class="payout-report-actions"><label class="month-picker-label" for="payout-report-month">Month</label><input id="payout-report-month" type="month" aria-label="Select payout report month" required><button class="button button-secondary button-small" id="export-payout-report">Download CSV</button></div>
+            </div>
+            <div class="metric-grid payout-report-metrics">
+              <article class="metric-card"><div class="metric-top"><span>Total payouts</span><span class="metric-icon lilac">₹</span></div><div class="metric-value" id="monthly-payout-total">—</div><div class="metric-foot"><span id="monthly-payout-count">0</span> settlements</div></article>
+              <article class="metric-card"><div class="metric-top"><span>Credited</span><span class="metric-icon mint">✓</span></div><div class="metric-value" id="monthly-payout-credited">—</div><div class="metric-foot"><span id="monthly-payout-credited-count">0</span> credited settlements</div></article>
+              <article class="metric-card"><div class="metric-top"><span>Pending</span><span class="metric-icon peach">…</span></div><div class="metric-value" id="monthly-payout-pending">—</div><div class="metric-foot"><span id="monthly-payout-pending-count">0</span> pending settlements</div></article>
+            </div>
+            <div class="payout-report-subheading"><strong>By platform</strong><span class="panel-caption" id="payout-report-month-label"></span></div>
+            <div class="table-scroll"><table class="payout-report-platform-table"><thead><tr><th>PLATFORM</th><th>SETTLEMENTS</th><th>CREDITED</th><th>PENDING</th><th class="align-right">TOTAL</th></tr></thead><tbody id="payout-report-platforms"></tbody></table></div>
+            <div class="empty-state hidden" id="payout-report-empty">No payouts recorded for this month.</div>
+            <div class="payout-report-subheading"><strong>Payout details</strong></div>
+            <div class="table-scroll"><table><thead><tr><th>DATE</th><th>PLATFORM</th><th>STATUS</th><th>REFERENCE</th><th class="align-right">AMOUNT</th></tr></thead><tbody id="payout-report-table"></tbody></table></div>
+          </div>
+        </section>
         <div class="panel transaction-panel">
           <div class="panel-heading"><div><p class="eyebrow">CASH FLOW</p><h2>Recent payouts &amp; expenses</h2></div></div>
           <div class="table-scroll"><table><thead><tr><th>DATE</th><th>TYPE</th><th>DETAIL</th><th>STATUS</th><th class="align-right">AMOUNT</th></tr></thead><tbody id="finance-table"></tbody></table></div>
