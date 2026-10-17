@@ -42,6 +42,7 @@ Inventory, purchases, stock movements, payouts, and expenses are read from and w
 ## What’s included
 
 - Searchable inventory with low-stock and out-of-stock indicators.
+- Add inventory items with category-specific sub-category choices or create a new sub-category.
 - Stock adjustments that prevent stock from going below zero.
 - Purchase entry that updates stock, purchase totals, and movement history together.
 - Platform payout and operating expense entry, with a live profit-and-loss summary.

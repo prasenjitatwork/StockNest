@@ -715,25 +715,54 @@
   }
 
   function openNewItem() {
+    const categories = [...new Set(state.inventory.map((item) => item.category.trim()).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b));
+    const categoryOptions = (categories.length ? categories : ["Food", "Packaging"]).map((category) => [category, category]);
+    const subcategoryOptions = (category) => [...new Set(state.inventory
+      .filter((item) => item.category.trim() === category)
+      .map((item) => item.subcategory.trim())
+      .filter(Boolean))].sort((a, b) => a.localeCompare(b));
+    const subcategoryField = `<div class="form-field"><label for="field-subcategory">Sub-category</label><select id="field-subcategory" name="subcategory"><option value="">Select a sub-category (optional)</option></select></div><div class="form-field hidden" id="new-subcategory-field"><label for="field-new-subcategory">New sub-category</label><input id="field-new-subcategory" name="newSubcategory" type="text" placeholder="Enter a new sub-category"></div>`;
     openForm({
       eyebrow: "KITCHEN CATALOG", title: "Add inventory item", submit: "Add item",
       fields: field("Item name", "name", "text", { full: true, placeholder: "e.g. Fresh mozzarella" })
-        + field("Category", "category", "select", { options: [["Food", "Food"], ["Packaging", "Packaging"]] })
-        + field("Sub-category", "subcategory", "text", { placeholder: "e.g. Dairy" })
+        + field("Category", "category", "select", { options: categoryOptions })
+        + subcategoryField
         + field("Purchase unit", "unit", "text", { placeholder: "Packet, bottle, box..." })
         + field("Opening stock", "stock", "number", { min: 0, step: "1" })
         + field("Brand / supplier", "company", "text", { required: false }),
       onSubmit: (values) => {
         const name = values.name.trim();
         const stock = Number(values.stock);
+        const subcategory = values.subcategory === "__new__" ? values.newSubcategory.trim() : values.subcategory.trim();
         if (!name || state.inventory.some((item) => item.name.toLowerCase() === name.toLowerCase())) return "Enter a name that is not already in your catalog.";
         if (!Number.isInteger(stock) || stock < 0) return "Opening stock must be a whole number of zero or more.";
-        const item = { name, category: values.category, subcategory: values.subcategory.trim() || "Uncategorized", unit: values.unit.trim() || "Unit", stock, company: values.company.trim() };
+        if (values.subcategory === "__new__" && !subcategory) return "Enter the new sub-category name.";
+        const item = { name, category: values.category, subcategory, unit: values.unit.trim() || "Unit", stock, company: values.company.trim() };
         state.inventory.push(item);
         if (stock > 0) state.movements.push({ date: today(), item: name, type: "in", quantity: stock, staff: "Stockroom", notes: "Opening stock" });
         return "";
       }
     });
+    const categorySelect = get("field-category");
+    const subcategorySelect = get("field-subcategory");
+    const newSubcategoryField = get("new-subcategory-field");
+    const newSubcategoryInput = get("field-new-subcategory");
+    const updateSubcategories = () => {
+      const options = subcategoryOptions(categorySelect.value);
+      subcategorySelect.innerHTML = `<option value="">Select a sub-category (optional)</option>${options.map((subcategory) => `<option value="${escapeHtml(subcategory)}">${escapeHtml(subcategory)}</option>`).join("")}<option value="__new__">Add a new sub-category…</option>`;
+      newSubcategoryField.classList.add("hidden");
+      newSubcategoryInput.required = false;
+      newSubcategoryInput.value = "";
+    };
+    categorySelect.addEventListener("change", updateSubcategories);
+    subcategorySelect.addEventListener("change", () => {
+      const addingNewSubcategory = subcategorySelect.value === "__new__";
+      newSubcategoryField.classList.toggle("hidden", !addingNewSubcategory);
+      newSubcategoryInput.required = addingNewSubcategory;
+      if (addingNewSubcategory) newSubcategoryInput.focus();
+    });
+    updateSubcategories();
   }
 
   function openPayout() {
