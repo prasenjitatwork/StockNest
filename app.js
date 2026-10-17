@@ -593,8 +593,8 @@
   }
 
   const field = (label, name, type, options = {}) => {
-    const control = type === "select" && options.searchable
-      ? `<input id="field-${name}" name="${name}" type="search" list="field-${name}-options" autocomplete="off" placeholder="${escapeHtml(options.placeholder || "Type to search items...")}" ${options.required === false ? "" : "required"}><datalist id="field-${name}-options">${options.options.map(([value, text]) => `<option value="${escapeHtml(value)}" label="${escapeHtml(text)}"></option>`).join("")}</datalist>`
+    const control = type === "select" && options.searchable !== false
+      ? `<input id="field-${name}" name="${name}" type="search" list="field-${name}-options" autocomplete="off" placeholder="${escapeHtml(options.placeholder || "Type to search or choose...")}" ${options.required === false ? "" : "required"}><datalist id="field-${name}-options">${options.options.map(([value, text]) => `<option value="${escapeHtml(value)}" label="${escapeHtml(text)}"></option>`).join("")}</datalist>`
       : type === "select"
         ? `<select id="field-${name}" name="${name}" ${options.required === false ? "" : "required"}>${options.options.map(([value, text]) => `<option value="${escapeHtml(value)}">${escapeHtml(text)}</option>`).join("")}</select>`
       : `<input id="field-${name}" name="${name}" type="${type}" ${options.min !== undefined ? `min="${options.min}"` : ""} ${options.step ? `step="${options.step}"` : ""} ${options.placeholder ? `placeholder="${escapeHtml(options.placeholder)}"` : ""} ${options.required === false ? "" : "required"}>`;
@@ -611,14 +611,15 @@
     const form = get("dialog-form");
     form.onsubmit = async (event) => {
       event.preventDefault();
-      const searchableField = form.querySelector("input[list]");
-      if (searchableField) {
-        const options = [...form.querySelectorAll(`#${CSS.escape(searchableField.list.id)} option`)];
-        if (!options.some((option) => option.value === searchableField.value)) {
-          get("dialog-error").textContent = "Choose an item from the search suggestions.";
-          get("dialog-error").classList.remove("hidden");
-          searchableField.focus();
-          return;
+      for (const searchableField of form.querySelectorAll("input[list]")) {
+        const options = [...searchableField.list.options];
+        if (searchableField.required || searchableField.value) {
+          if (!options.some((option) => option.value === searchableField.value)) {
+            get("dialog-error").textContent = `Choose a listed option for ${form.querySelector(`label[for="${CSS.escape(searchableField.id)}"]`).textContent.toLowerCase()}.`;
+            get("dialog-error").classList.remove("hidden");
+            searchableField.focus();
+            return;
+          }
         }
       }
       const previous = clone(state);
@@ -722,11 +723,12 @@
       .filter((item) => item.category.trim() === category)
       .map((item) => item.subcategory.trim())
       .filter(Boolean))].sort((a, b) => a.localeCompare(b));
-    const subcategoryField = `<div class="form-field"><label for="field-subcategory">Sub-category</label><select id="field-subcategory" name="subcategory"><option value="">Select a sub-category (optional)</option></select></div><div class="form-field hidden" id="new-subcategory-field"><label for="field-new-subcategory">New sub-category</label><input id="field-new-subcategory" name="newSubcategory" type="text" placeholder="Enter a new sub-category"></div>`;
+    const subcategoryField = field("Sub-category", "subcategory", "select", { options: [], required: false, placeholder: "Search or choose a sub-category..." })
+      + `<div class="form-field hidden" id="new-subcategory-field"><label for="field-new-subcategory">New sub-category</label><input id="field-new-subcategory" name="newSubcategory" type="text" placeholder="Enter a new sub-category"></div>`;
     openForm({
       eyebrow: "KITCHEN CATALOG", title: "Add inventory item", submit: "Add item",
       fields: field("Item name", "name", "text", { full: true, placeholder: "e.g. Fresh mozzarella" })
-        + field("Category", "category", "select", { options: categoryOptions })
+        + field("Category", "category", "select", { options: categoryOptions, placeholder: "Search or choose a category..." })
         + subcategoryField
         + field("Purchase unit", "unit", "text", { placeholder: "Packet, bottle, box..." })
         + field("Opening stock", "stock", "number", { min: 0, step: "1" })
@@ -746,22 +748,31 @@
     });
     const categorySelect = get("field-category");
     const subcategorySelect = get("field-subcategory");
+    const subcategoryOptionsList = get("field-subcategory-options");
     const newSubcategoryField = get("new-subcategory-field");
     const newSubcategoryInput = get("field-new-subcategory");
+    let selectedCategory = "";
     const updateSubcategories = () => {
+      if (!categoryOptions.some(([category]) => category === categorySelect.value)
+        || selectedCategory === categorySelect.value) return;
+      selectedCategory = categorySelect.value;
       const options = subcategoryOptions(categorySelect.value);
-      subcategorySelect.innerHTML = `<option value="">Select a sub-category (optional)</option>${options.map((subcategory) => `<option value="${escapeHtml(subcategory)}">${escapeHtml(subcategory)}</option>`).join("")}<option value="__new__">Add a new sub-category…</option>`;
+      subcategorySelect.value = "";
+      subcategoryOptionsList.innerHTML = `${options.map((subcategory) => `<option value="${escapeHtml(subcategory)}"></option>`).join("")}<option value="__new__" label="Add a new sub-category…"></option>`;
       newSubcategoryField.classList.add("hidden");
       newSubcategoryInput.required = false;
       newSubcategoryInput.value = "";
     };
+    categorySelect.addEventListener("input", updateSubcategories);
     categorySelect.addEventListener("change", updateSubcategories);
-    subcategorySelect.addEventListener("change", () => {
+    const updateNewSubcategoryVisibility = () => {
       const addingNewSubcategory = subcategorySelect.value === "__new__";
       newSubcategoryField.classList.toggle("hidden", !addingNewSubcategory);
       newSubcategoryInput.required = addingNewSubcategory;
       if (addingNewSubcategory) newSubcategoryInput.focus();
-    });
+    };
+    subcategorySelect.addEventListener("input", updateNewSubcategoryVisibility);
+    subcategorySelect.addEventListener("change", updateNewSubcategoryVisibility);
     updateSubcategories();
   }
 
