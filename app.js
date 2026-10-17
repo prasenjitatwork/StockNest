@@ -2,6 +2,9 @@
   "use strict";
 
   const GOOGLE_SETTINGS_KEY = "aaravis-yum-box-google-settings-v1";
+  const THEME_KEY = "aaravis-yum-box-theme-v1";
+  const savedTheme = localStorage.getItem(THEME_KEY) === "dark" ? "dark" : "light";
+  document.documentElement.dataset.theme = savedTheme;
   const clone = (value) => JSON.parse(JSON.stringify(value));
   const hasSavedSheet = Boolean(localStorage.getItem(GOOGLE_SETTINGS_KEY));
   const isLocalServer = ["localhost", "127.0.0.1"].includes(window.location.hostname);
@@ -50,6 +53,15 @@
     get("google-connection-detail").textContent = connected ? "Changes sync to your workbook" : "Sign in to sync this workbook";
     get("google-top-button").innerHTML = connected ? "↻ <span>Refresh sheet</span>" : "↗ <span>Connect sheet</span>";
     get("logout-button").classList.toggle("hidden", !connected);
+  }
+
+  function updateThemeToggle(theme) {
+    const isDark = theme === "dark";
+    document.documentElement.dataset.theme = theme;
+    get("theme-toggle").setAttribute("aria-label", `Switch to ${isDark ? "light" : "dark"} theme`);
+    get("theme-toggle").title = `Switch to ${isDark ? "light" : "dark"} theme`;
+    get("theme-toggle-icon").textContent = isDark ? "☀" : "◐";
+    get("theme-toggle-label").textContent = isDark ? "Light mode" : "Dark mode";
   }
 
   function showLoginPage(visible) {
@@ -1010,6 +1022,11 @@
     if (button) openAdjustment(button.dataset.adjust);
   });
   get("quick-add").addEventListener("click", openPurchase);
+  get("theme-toggle").addEventListener("click", () => {
+    const theme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    localStorage.setItem(THEME_KEY, theme);
+    updateThemeToggle(theme);
+  });
   get("add-item-button").addEventListener("click", openNewItem);
   get("adjust-stock-button").addEventListener("click", () => openAdjustment());
   get("add-payout-button").addEventListener("click", openPayout);
@@ -1083,6 +1100,7 @@
     }
   });
   get("login-sheet-id").value = googleSettings.sheetId;
+  updateThemeToggle(savedTheme);
   get("hosted-oauth-help").classList.toggle("hidden", isLocalServer);
   get("hosted-oauth-help").querySelector("code").textContent = `${window.location.origin}/oauth-callback.php`;
   updateConnectionUI(false);
