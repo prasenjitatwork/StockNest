@@ -223,7 +223,7 @@ try {
             'client_id' => $config['client_id'],
             'redirect_uri' => $config['redirect_uri'],
             'response_type' => 'code',
-            'scope' => 'https://www.googleapis.com/auth/spreadsheets openid email',
+            'scope' => 'https://www.googleapis.com/auth/spreadsheets openid email profile',
             'access_type' => 'offline',
             'prompt' => 'consent select_account',
             'include_granted_scopes' => 'true',
@@ -287,6 +287,8 @@ try {
         $_SESSION['access_expires_at'] = time() + (int) ($token['expires_in'] ?? 3600);
         $_SESSION['refresh_token'] = $token['refresh_token'];
         $_SESSION['email'] = $profileResponse['body']['email'];
+        $_SESSION['name'] = is_string($profileResponse['body']['name'] ?? null) ? $profileResponse['body']['name'] : '';
+        $_SESSION['picture'] = is_string($profileResponse['body']['picture'] ?? null) ? $profileResponse['body']['picture'] : '';
         $_SESSION['expires_at'] = time() + SESSION_LIFETIME;
         if ($popup) {
             finish_oauth_popup($config['base_url']);
@@ -307,6 +309,8 @@ try {
             'configured' => true,
             'authenticated' => !empty($_SESSION['refresh_token']),
             'email' => $_SESSION['email'] ?? '',
+            'name' => $_SESSION['name'] ?? '',
+            'picture' => $_SESSION['picture'] ?? '',
             'expiresAt' => (int) $_SESSION['expires_at'] * 1000,
         ]);
     }

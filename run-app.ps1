@@ -144,7 +144,7 @@ try {
                     client_id = $clientId
                     redirect_uri = $redirectUri
                     response_type = "code"
-                    scope = "https://www.googleapis.com/auth/spreadsheets openid email"
+                    scope = "https://www.googleapis.com/auth/spreadsheets openid email profile"
                     access_type = "offline"
                     prompt = "consent select_account"
                     include_granted_scopes = "true"
@@ -181,6 +181,8 @@ try {
                     AccessExpiresAt = [DateTimeOffset]::UtcNow.AddSeconds([Math]::Max(60, [int]$token.expires_in))
                     RefreshToken = $token.refresh_token
                     Email = $profile.email
+                    Name = $profile.name
+                    Picture = $profile.picture
                     ExpiresAt = [DateTimeOffset]::UtcNow.Add($sessionDuration)
                 }
                 Set-SessionCookie $response $sessionId ([int]$sessionDuration.TotalSeconds)
@@ -192,6 +194,8 @@ try {
                         configured = $true
                         authenticated = $true
                         email = $session.Email
+                        name = $session.Name
+                        picture = $session.Picture
                         expiresAt = $session.ExpiresAt.ToUnixTimeMilliseconds()
                     }
                 } else {

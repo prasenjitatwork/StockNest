@@ -35,7 +35,7 @@ If Google shows **Error 401: invalid_client** or **no registered origin**, open 
 
 If Google shows **Error 403: access_denied** saying the app has not completed verification, check **Google Auth Platform → Audience → Test users** and add the exact account selected in the sign-in prompt. Save, then retry and accept the unverified-app warning if Google displays one. Public use beyond test users requires completing Google's verification for the Sheets scope.
 
-The app uses the Google Sheets API through its local or hosted server. Google sign-in requests the `spreadsheets` scope, which lets this app read and edit spreadsheets available to the authorizing account; app requests target only the configured spreadsheet. The app does not share the workbook with another person. If the sheet is currently shared as "Anyone with the link", set **General access** to **Restricted** in Google Sheets to stop other link holders from reading it; OAuth does not change the sheet's existing sharing settings.
+The app uses the Google Sheets API through its local or hosted server. Google sign-in requests the `spreadsheets` scope to read and edit spreadsheets available to the authorizing account, plus basic OpenID profile information to show the signed-in user's name and picture; app requests target only the configured spreadsheet. The app does not share the workbook with another person. If the sheet is currently shared as "Anyone with the link", set **General access** to **Restricted** in Google Sheets to stop other link holders from reading it; OAuth does not change the sheet's existing sharing settings.
 
 Inventory, purchases, stock movements, payouts, and expenses are read from and written directly to Google Sheets. The app does not bundle a local workbook copy, save workbook data or OAuth tokens in browser storage, or provide offline mode. Only the selected sheet link is saved in this browser. OAuth tokens stay on the server; after one day, sign in again.
 
@@ -47,6 +47,7 @@ Inventory, purchases, stock movements, payouts, and expenses are read from and w
 - Purchase entry that updates stock, purchase totals, and movement history together.
 - Paginated purchase history with search and interactive Excel export of all matching purchases.
 - Current date displayed in the app's top bar, including on mobile.
+- Google account name, email, and profile photo in the signed-in user profile.
 - Platform payout and operating expense entry, with a live profit-and-loss summary.
 - Monthly Payouts Summary matching the workbook's platform credits, purchase costs, operating expenses, total expenses, net profit/loss, and margin, with CSV export.
 - Use Google Sheets' **File → Make a copy** or **Download** options to back up workbook data.

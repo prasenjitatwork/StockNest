@@ -28,6 +28,8 @@
   }
   let sessionExpiresAt = 0;
   let googleAccountEmail = "";
+  let googleAccountName = "";
+  let googleAccountPicture = "";
   let googleLoginPopup = null;
   let sheetRows = { inventory: {}, inventoryNext: 8, purchasesNext: 8, movementsNext: 5, payoutsNext: 8, expensesNext: 8 };
   let sheetIds = {};
@@ -69,6 +71,37 @@
     get("logout-button").classList.toggle("hidden", !connected);
   }
 
+  function updateGoogleProfile(session) {
+    googleAccountEmail = typeof session.email === "string" ? session.email : "";
+    googleAccountName = typeof session.name === "string" ? session.name.trim() : "";
+    googleAccountPicture = typeof session.picture === "string" ? session.picture : "";
+    const fallbackName = googleAccountEmail.split("@")[0] || "Google account";
+    const displayName = googleAccountName || fallbackName;
+    const initials = displayName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+    get("google-profile-name").textContent = displayName;
+    get("google-profile-detail").textContent = googleAccountEmail || "Signed in with Google";
+    get("google-account-label").textContent = googleAccountEmail || displayName;
+
+    const image = get("google-profile-picture");
+    const fallback = get("google-profile-initials");
+    const safePicture = /^https:\/\/(?:[a-z0-9-]+\.)*googleusercontent\.com(?:\/|$)/i.test(googleAccountPicture);
+    image.onerror = () => {
+      image.classList.add("hidden");
+      fallback.classList.remove("hidden");
+    };
+    if (safePicture) {
+      image.alt = `Google profile photo for ${displayName}`;
+      image.src = googleAccountPicture;
+      image.classList.remove("hidden");
+      fallback.classList.add("hidden");
+    } else {
+      image.removeAttribute("src");
+      image.classList.add("hidden");
+      fallback.classList.remove("hidden");
+    }
+    fallback.textContent = initials || "SN";
+  }
+
   function updateThemeToggle(theme) {
     const isDark = theme === "dark";
     document.documentElement.dataset.theme = theme;
@@ -107,6 +140,9 @@
       state = null;
       sessionExpiresAt = 0;
       googleAccountEmail = "";
+      googleAccountName = "";
+      googleAccountPicture = "";
+      updateGoogleProfile({});
       sheetRows = { inventory: {}, inventoryNext: 8, purchasesNext: 8, movementsNext: 5, payoutsNext: 8, expensesNext: 8 };
       sheetIds = {};
       resetLoginFlow();
@@ -1160,9 +1196,8 @@
       const session = await response.json();
       get("oauth-setup-note").classList.toggle("hidden", Boolean(session.configured));
       if (!session.authenticated) return;
-      googleAccountEmail = session.email || "";
+      updateGoogleProfile(session);
       sessionExpiresAt = session.expiresAt || 0;
-      get("google-account-label").textContent = googleAccountEmail || "authorized";
       if (hasSavedSheet) {
         try {
           const remote = await loadSpreadsheet();

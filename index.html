@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f8f7f3">
   <title>StockNest | Inventory Management</title>
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -52,7 +54,11 @@
         <button id="connect-google" class="google-connect"><span class="google-g">G</span><span><strong id="google-connection-label">Connect Google Sheet</strong><small id="google-connection-detail">Sign in to sync this workbook</small></span><span class="connect-arrow">→</span></button>
         <div class="sidebar-note"><span class="note-dot"></span><span><strong>Private to your account</strong><small>Google access is authorized by you</small></span></div>
         <button id="logout-button" class="sidebar-action">↪ <span>Log out</span></button>
-        <div class="profile"><span class="avatar">SN</span><span><strong>StockNest</strong><small>Inventory manager</small></span></div>
+        <div class="profile">
+          <img class="avatar avatar-image hidden" id="google-profile-picture" alt="">
+          <span class="avatar" id="google-profile-initials" aria-hidden="true">SN</span>
+          <span class="profile-copy"><strong id="google-profile-name">StockNest</strong><small id="google-profile-detail">Inventory manager</small></span>
+        </div>
       </div>
     </aside>
 
