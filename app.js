@@ -158,8 +158,22 @@
 
   function openGoogleSettings() {
     get("google-sheet-id").value = googleSettings.sheetId;
+    updateWorkbookDownloadLink(googleSettings.sheetId);
     get("google-login-error").classList.add("hidden");
     get("google-dialog").showModal();
+  }
+
+  function updateWorkbookDownloadLink(value) {
+    const sheetId = spreadsheetIdFromInput(value);
+    const link = get("download-google-sheet");
+    const isValidId = /^[a-zA-Z0-9-_]+$/.test(sheetId);
+    if (!isValidId) {
+      link.removeAttribute("href");
+      link.classList.add("hidden");
+      return;
+    }
+    link.href = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/export?format=xlsx`;
+    link.classList.remove("hidden");
   }
 
   function showGoogleError(message) {
@@ -1270,6 +1284,7 @@
     if (event.target === get("app-dialog")) get("app-dialog").close();
   });
   get("connect-google").addEventListener("click", openGoogleSettings);
+  get("google-sheet-id").addEventListener("input", (event) => updateWorkbookDownloadLink(event.currentTarget.value));
   get("login-google-button").addEventListener("click", () => {
     get("login-error").classList.add("hidden");
     startGoogleLogin();
@@ -1317,6 +1332,7 @@
       state = remote;
       localStorage.setItem(GOOGLE_SETTINGS_KEY, JSON.stringify({ sheetId }));
       get("google-sheet-id").value = sheetId;
+      updateWorkbookDownloadLink(sheetId);
       get("google-login-error").classList.add("hidden");
       render();
       updateConnectionUI(true);
