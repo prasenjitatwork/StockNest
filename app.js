@@ -1210,7 +1210,6 @@
       }
     });
     get("field-date").value = today();
-    get("field-date").max = today();
   }
 
   function openExpense() {
