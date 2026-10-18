@@ -1195,7 +1195,7 @@
       fields: field("Platform", "platform", "select", { options: [["Swiggy", "Swiggy"], ["Zomato", "Zomato"], ["Magicpin", "Magicpin"], ["Ownly", "Ownly"]] })
         + field("Amount (₹)", "amount", "number", { min: 0.01, step: "0.01" })
         + field("Date", "date", "date")
-        + field("Status", "status", "select", { options: [["Credited", "Credited"], ["Pending", "Pending"]] })
+        + field("Status", "status", "select", { options: [["Credited", "Credited"], ["Processing", "Processing"], ["Pending", "Pending"]] })
         + field("UTR / reference ID", "reference", "text", { placeholder: "Optional", required: false })
         + field("Notes", "notes", "text", { placeholder: "Optional", required: false }),
       onSubmit: (values) => {
@@ -1215,13 +1215,23 @@
   function openExpense() {
     openForm({
       eyebrow: "OPERATING COSTS", title: "Add operating expense", submit: "Add expense",
-      fields: field("Expense category", "category", "text", { placeholder: "e.g. Staff Wages, Delivery Charges" })
+      fields: field("Expense category", "category", "select", { options: [
+        ["Staff Wages", "Staff Wages"],
+        ["Utilities", "Utilities"],
+        ["Rent", "Rent"],
+        ["Kitchen Supplies", "Kitchen Supplies"],
+        ["Maintenance", "Maintenance"],
+        ["Packaging", "Packaging"],
+        ["Marketing & Misc", "Marketing & Misc"],
+        ["Delivery Charges", "Delivery Charges"],
+        ["Account Maintain Charges", "Account Maintain Charges"]
+      ] })
         + field("Amount (₹)", "amount", "number", { min: 0.01, step: "0.01" })
         + field("Date", "date", "date")
         + field("Paid to", "beneficiary", "text", { placeholder: "Name or supplier", required: false })
         + field("Description", "description", "text", { full: true, placeholder: "What was this for?" })
-        + field("Payment mode", "mode", "text", { placeholder: "e.g. Cash, UPI, bank transfer" })
-        + field("Payment status", "status", "select", { options: [["Paid", "Paid"], ["Pending", "Pending"]] })
+        + field("Payment mode", "mode", "select", { options: [["UPI", "UPI"], ["Bank Transfer", "Bank Transfer"], ["Cash", "Cash"], ["Card", "Card"]] })
+        + field("Payment status", "status", "select", { options: [["Paid", "Paid"], ["Pending", "Pending"], ["Scheduled", "Scheduled"], ["Cancelled", "Cancelled"]] })
         + field("Reference ID / notes", "notes", "text", { placeholder: "Optional", required: false, full: true }),
       onSubmit: (values) => {
         const amount = Number(values.amount);
