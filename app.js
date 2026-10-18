@@ -52,6 +52,8 @@
   let inventoryFilter = "all";
   let inventoryPage = 1;
   let purchasePage = 1;
+  let payoutPage = 1;
+  let expensePage = 1;
   const tablePageSize = 10;
   let toastTimer;
 
@@ -533,6 +535,8 @@
     renderDashboard();
     renderInventory();
     renderPurchases();
+    renderPayoutLog();
+    renderExpenseLog();
     renderFinance();
     get("nav-low-count").textContent = lowItems().length || "";
     get("today-label").textContent = `Today · ${new Intl.DateTimeFormat("en-IN", {
@@ -641,6 +645,58 @@
     renderPagination("purchase-pagination", matches.length, purchasePage, (page) => {
       purchasePage = page;
       renderPurchases();
+    });
+  }
+
+  function renderPayoutLog() {
+    const query = get("payout-search").value.trim().toLowerCase();
+    const payouts = newestFirst(state.payouts);
+    const matches = payouts.filter((entry) =>
+      [entry.date, dateLabel(entry.date), entry.platform, entry.amount, entry.status, entry.reference, entry.notes]
+        .join(" ").toLowerCase().includes(query));
+    const pending = payouts.filter((entry) => /pending|awaiting/i.test(entry.status))
+      .reduce((sum, entry) => sum + (Number(entry.amount) || 0), 0);
+    get("payout-log-total").textContent = money(sumAmount(payouts, "amount"));
+    get("payout-log-count").textContent = number(payouts.length);
+    get("payout-log-pending").textContent = money(pending);
+    get("payout-log-result-count").textContent = `${number(matches.length)} ${matches.length === 1 ? "payout" : "payouts"}`;
+    get("payout-log-empty").classList.toggle("hidden", matches.length > 0);
+    const pageCount = Math.max(1, Math.ceil(matches.length / tablePageSize));
+    payoutPage = Math.min(payoutPage, pageCount);
+    const start = (payoutPage - 1) * tablePageSize;
+    get("payout-log-table").innerHTML = matches.slice(start, start + tablePageSize).map((entry) => {
+      const isPending = /pending|awaiting/i.test(entry.status);
+      return `<tr><td>${dateLabel(entry.date)}</td><td>${escapeHtml(entry.platform || "—")}</td><td class="stock-cell">${money(entry.amount)}</td><td><span class="status-pill ${isPending ? "low" : ""}">${escapeHtml(entry.status || "Recorded")}</span></td><td>${escapeHtml(entry.reference || "—")}</td><td>${escapeHtml(entry.notes || "—")}</td></tr>`;
+    }).join("");
+    renderPagination("payout-log-pagination", matches.length, payoutPage, (page) => {
+      payoutPage = page;
+      renderPayoutLog();
+    });
+  }
+
+  function renderExpenseLog() {
+    const query = get("expense-search").value.trim().toLowerCase();
+    const expenses = newestFirst(state.expenses);
+    const matches = expenses.filter((entry) =>
+      [entry.date, dateLabel(entry.date), entry.category, entry.beneficiary, entry.description, entry.amount, entry.mode, entry.status, entry.notes]
+        .join(" ").toLowerCase().includes(query));
+    const pending = expenses.filter((entry) => /pending|awaiting/i.test(entry.status))
+      .reduce((sum, entry) => sum + (Number(entry.amount) || 0), 0);
+    get("expense-log-total").textContent = money(sumAmount(expenses, "amount"));
+    get("expense-log-count").textContent = number(expenses.length);
+    get("expense-log-pending").textContent = money(pending);
+    get("expense-log-result-count").textContent = `${number(matches.length)} ${matches.length === 1 ? "expense" : "expenses"}`;
+    get("expense-log-empty").classList.toggle("hidden", matches.length > 0);
+    const pageCount = Math.max(1, Math.ceil(matches.length / tablePageSize));
+    expensePage = Math.min(expensePage, pageCount);
+    const start = (expensePage - 1) * tablePageSize;
+    get("expense-log-table").innerHTML = matches.slice(start, start + tablePageSize).map((entry) => {
+      const isPending = /pending|awaiting/i.test(entry.status);
+      return `<tr><td>${dateLabel(entry.date)}</td><td>${escapeHtml(entry.category || "—")}</td><td>${escapeHtml(entry.beneficiary || "—")}</td><td>${escapeHtml(entry.description || "—")}</td><td class="stock-cell">${money(entry.amount)}</td><td>${escapeHtml(entry.mode || "—")}</td><td><span class="status-pill ${isPending ? "low" : ""}">${escapeHtml(entry.status || "Recorded")}</span></td><td>${escapeHtml(entry.notes || "—")}</td></tr>`;
+    }).join("");
+    renderPagination("expense-log-pagination", matches.length, expensePage, (page) => {
+      expensePage = page;
+      renderExpenseLog();
     });
   }
 
@@ -942,7 +998,7 @@
   function showPage(page) {
     document.querySelectorAll(".page-view").forEach((view) => view.classList.toggle("active", view.id === `page-${page}`));
     document.querySelectorAll(".nav-link").forEach((link) => link.classList.toggle("active", link.dataset.page === page));
-    const labels = { dashboard: "Overview", inventory: "Inventory", purchases: "Purchases", finance: "Profit & loss" };
+    const labels = { dashboard: "Overview", inventory: "Inventory", purchases: "Purchases", payouts: "Online payouts", expenses: "Expenses", finance: "Profit & loss" };
     get("breadcrumb-current").textContent = labels[page];
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -1140,14 +1196,16 @@
         + field("Amount (₹)", "amount", "number", { min: 0.01, step: "0.01" })
         + field("Date", "date", "date")
         + field("Status", "status", "select", { options: [["Credited", "Credited"], ["Pending", "Pending"]] })
-        + field("Reference / notes", "reference", "text", { placeholder: "Optional", required: false, full: true }),
+        + field("UTR / reference ID", "reference", "text", { placeholder: "Optional", required: false })
+        + field("Notes", "notes", "text", { placeholder: "Optional", required: false }),
       onSubmit: (values) => {
         const amount = Number(values.amount);
         if (!Number.isFinite(amount) || amount <= 0) return "Enter a settlement amount greater than zero.";
         const date = values.date || today();
-        state.payouts.push({ date, platform: values.platform, amount, status: values.status, reference: values.reference.trim(), notes: "" });
+        state.payouts.push({ date, platform: values.platform, amount, status: values.status, reference: values.reference.trim(), notes: values.notes.trim() });
         state.financials.platforms[values.platform] = Number(state.financials.platforms[values.platform] || 0) + amount;
         state.financials.revenue += amount;
+        payoutPage = 1;
         return "";
       }
     });
@@ -1158,16 +1216,20 @@
   function openExpense() {
     openForm({
       eyebrow: "OPERATING COSTS", title: "Add operating expense", submit: "Add expense",
-      fields: field("Expense category", "category", "select", { options: [["Staff Wages", "Staff wages"], ["Utilities & Bills", "Utilities & bills"], ["Other Overhead", "Other overhead"]] })
+      fields: field("Expense category", "category", "text", { placeholder: "e.g. Staff Wages, Delivery Charges" })
         + field("Amount (₹)", "amount", "number", { min: 0.01, step: "0.01" })
         + field("Date", "date", "date")
-        + field("Paid to", "beneficiary", "text", { placeholder: "Name or supplier" })
+        + field("Paid to", "beneficiary", "text", { placeholder: "Name or supplier", required: false })
         + field("Description", "description", "text", { full: true, placeholder: "What was this for?" })
-        + field("Payment status", "status", "select", { options: [["Paid", "Paid"], ["Pending", "Pending"]] }),
+        + field("Payment mode", "mode", "text", { placeholder: "e.g. Cash, UPI, bank transfer" })
+        + field("Payment status", "status", "select", { options: [["Paid", "Paid"], ["Pending", "Pending"]] })
+        + field("Reference ID / notes", "notes", "text", { placeholder: "Optional", required: false, full: true }),
       onSubmit: (values) => {
         const amount = Number(values.amount);
+        if (!values.category.trim()) return "Enter an expense category.";
         if (!Number.isFinite(amount) || amount <= 0) return "Enter an expense amount greater than zero.";
-        state.expenses.push({ date: values.date || today(), category: values.category, beneficiary: values.beneficiary.trim(), description: values.description.trim(), amount, mode: "", status: values.status, notes: "" });
+        state.expenses.push({ date: values.date || today(), category: values.category.trim(), beneficiary: values.beneficiary.trim(), description: values.description.trim(), amount, mode: values.mode.trim(), status: values.status, notes: values.notes.trim() });
+        expensePage = 1;
         return "";
       }
     });
@@ -1260,6 +1322,14 @@
   get("purchase-search").addEventListener("input", () => {
     purchasePage = 1;
     renderPurchases();
+  });
+  get("payout-search").addEventListener("input", () => {
+    payoutPage = 1;
+    renderPayoutLog();
+  });
+  get("expense-search").addEventListener("input", () => {
+    expensePage = 1;
+    renderExpenseLog();
   });
   get("download-inventory").addEventListener("click", downloadInventoryExcel);
   get("download-purchases").addEventListener("click", downloadPurchasesExcel);

@@ -49,7 +49,8 @@ Inventory, purchases, stock movements, payouts, and expenses are read from and w
 - Current date displayed in the app's top bar, including on mobile.
 - Google account name, email, and profile photo in the signed-in user profile.
 - Download the connected Google Sheet as an Excel workbook (`.xlsx`) with all tabs and formatting.
-- Platform payout and operating expense entry, with a live profit-and-loss summary.
+- Dedicated, searchable, paginated platform payout and employee/operating expense logs. Their entry forms capture the workbook's reference, notes, payment mode, and status fields and save directly to the matching Google Sheets tabs.
+- Platform payout and operating expense totals, with a live profit-and-loss summary.
 - Monthly Payouts Summary matching the workbook's platform credits, purchase costs, operating expenses, total expenses, net profit/loss, and margin, with CSV export.
 - Use Google Sheets' **File → Make a copy** or **Download** options to back up workbook data.
 

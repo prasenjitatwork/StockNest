@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=stocknest-ledger-pages">
 </head>
 <body>
   <section class="login-page" id="google-login-page">
@@ -48,6 +48,8 @@
         <button class="nav-link active" data-page="dashboard"><span class="nav-icon">◫</span>Overview</button>
         <button class="nav-link" data-page="inventory"><span class="nav-icon">▦</span>Inventory<span id="nav-low-count" class="nav-count"></span></button>
         <button class="nav-link" data-page="purchases"><span class="nav-icon">↙</span>Purchases</button>
+        <button class="nav-link" data-page="payouts"><span class="nav-icon">↗</span>Online payouts</button>
+        <button class="nav-link" data-page="expenses"><span class="nav-icon">−</span>Expenses</button>
         <button class="nav-link" data-page="finance"><span class="nav-icon">◷</span>Profit &amp; loss</button>
       </nav>
       <div class="sidebar-bottom">
@@ -142,8 +144,8 @@
           <article class="metric-card"><div class="metric-top"><span>Net profit</span><span class="metric-icon butter">＝</span></div><div class="metric-value" id="finance-profit">—</div><div class="metric-foot" id="finance-margin">—</div></article>
         </div>
         <div class="finance-grid">
-          <article class="panel"><div class="panel-heading"><div><p class="eyebrow">REVENUE</p><h2>Platform settlements</h2></div><button class="text-button" id="add-payout-button">＋ Add settlement</button></div><div id="finance-platforms" class="finance-platforms"></div><div class="panel-footnote" id="pending-payout-note"></div></article>
-          <article class="panel"><div class="panel-heading"><div><p class="eyebrow">OUTGOINGS</p><h2>Where the money goes</h2></div><button class="text-button" id="add-expense-button">＋ Add expense</button></div><div id="expense-breakdown" class="expense-breakdown"></div></article>
+          <article class="panel"><div class="panel-heading"><div><p class="eyebrow">REVENUE</p><h2>Platform settlements</h2></div><button class="text-button" data-open-page="payouts">View payout log →</button></div><div id="finance-platforms" class="finance-platforms"></div><div class="panel-footnote" id="pending-payout-note"></div></article>
+          <article class="panel"><div class="panel-heading"><div><p class="eyebrow">OUTGOINGS</p><h2>Where the money goes</h2></div><button class="text-button" data-open-page="expenses">View expense log →</button></div><div id="expense-breakdown" class="expense-breakdown"></div></article>
         </div>
         <section class="payout-report" aria-labelledby="payout-report-title">
           <div class="panel payout-report-panel">
@@ -168,12 +170,42 @@
         </div>
         <p class="finance-disclaimer">Workbook revenue includes the amounts shown in its summary. This snapshot is not a substitute for accounting or tax advice.</p>
       </section>
+
+      <section class="page-view" id="page-payouts">
+        <div class="page-heading compact-heading"><div><p class="eyebrow">ONLINE PAYOUTS LOG</p><h1>Platform payouts</h1><p class="page-subtitle">Record and review settlements from Swiggy, Zomato, Magicpin, and Ownly.</p></div><button class="button button-primary" id="add-payout-button">＋ Add payout</button></div>
+        <div class="metric-grid finance-metrics payout-log-metrics">
+          <article class="metric-card"><div class="metric-top"><span>Total settlements</span><span class="metric-icon mint">₹</span></div><div class="metric-value" id="payout-log-total">—</div><div class="metric-foot">Amounts in the online payouts log</div></article>
+          <article class="metric-card"><div class="metric-top"><span>Payout entries</span><span class="metric-icon lilac">↗</span></div><div class="metric-value" id="payout-log-count">—</div><div class="metric-foot">Settlement records</div></article>
+          <article class="metric-card"><div class="metric-top"><span>Pending credit</span><span class="metric-icon peach">◷</span></div><div class="metric-value" id="payout-log-pending">—</div><div class="metric-foot">Still awaiting credit</div></article>
+        </div>
+        <div class="panel inventory-panel">
+          <div class="table-heading"><div><strong id="payout-log-result-count">Payout history</strong><span class="panel-caption">Entries are saved to the workbook's Online Payouts Log tab.</span></div><div class="table-heading-actions"><div class="search-box search-box-small"><span>⌕</span><input id="payout-search" type="search" placeholder="Search payouts..." aria-label="Search payouts"></div></div></div>
+          <div class="table-scroll"><table><thead><tr><th>DATE</th><th>COMPANY / PLATFORM</th><th>CREDIT (₹)</th><th>SETTLEMENT STATUS</th><th>UTR / REFERENCE ID</th><th>NOTES</th></tr></thead><tbody id="payout-log-table"></tbody></table></div>
+          <div id="payout-log-empty" class="empty-state hidden">No payout entries match your search. Add a settlement to get started.</div>
+          <div class="table-pagination" id="payout-log-pagination" aria-label="Payout log pages"></div>
+        </div>
+      </section>
+
+      <section class="page-view" id="page-expenses">
+        <div class="page-heading compact-heading"><div><p class="eyebrow">EMPLOYEE &amp; OPERATING EXPENSES</p><h1>Expense log</h1><p class="page-subtitle">Track salaries, delivery charges, utilities, maintenance, and other business costs.</p></div><button class="button button-primary" id="add-expense-button">＋ Add expense</button></div>
+        <div class="metric-grid finance-metrics expense-log-metrics">
+          <article class="metric-card"><div class="metric-top"><span>Total expenses</span><span class="metric-icon peach">₹</span></div><div class="metric-value" id="expense-log-total">—</div><div class="metric-foot">Amounts in the expense log</div></article>
+          <article class="metric-card"><div class="metric-top"><span>Expense entries</span><span class="metric-icon lilac">−</span></div><div class="metric-value" id="expense-log-count">—</div><div class="metric-foot">Employee and operating costs</div></article>
+          <article class="metric-card"><div class="metric-top"><span>Pending payments</span><span class="metric-icon butter">◷</span></div><div class="metric-value" id="expense-log-pending">—</div><div class="metric-foot">Still awaiting payment</div></article>
+        </div>
+        <div class="panel inventory-panel">
+          <div class="table-heading"><div><strong id="expense-log-result-count">Expense history</strong><span class="panel-caption">Entries are saved to the workbook's Employee payment and other expe tab.</span></div><div class="table-heading-actions"><div class="search-box search-box-small"><span>⌕</span><input id="expense-search" type="search" placeholder="Search expenses..." aria-label="Search expenses"></div></div></div>
+          <div class="table-scroll"><table><thead><tr><th>DATE</th><th>EXPENSE CATEGORY</th><th>PAID TO / BENEFICIARY</th><th>DESCRIPTION / PURPOSE</th><th>AMOUNT (₹)</th><th>PAYMENT MODE</th><th>PAYMENT STATUS</th><th>REFERENCE / NOTES</th></tr></thead><tbody id="expense-log-table"></tbody></table></div>
+          <div id="expense-log-empty" class="empty-state hidden">No expense entries match your search. Add an expense to get started.</div>
+          <div class="table-pagination" id="expense-log-pagination" aria-label="Expense log pages"></div>
+        </div>
+      </section>
     </main>
   </div>
 
   <dialog id="app-dialog" class="app-dialog"><div class="dialog-shell"><div class="dialog-heading"><div><p class="eyebrow" id="dialog-eyebrow"></p><h2 id="dialog-title"></h2></div><button class="icon-button" id="dialog-close" aria-label="Close dialog">×</button></div><form id="dialog-form"><div id="dialog-fields" class="form-grid"></div><div id="dialog-error" class="form-error hidden"></div><div class="dialog-actions"><button type="button" class="button button-secondary" id="dialog-cancel">Cancel</button><button type="submit" class="button button-primary" id="dialog-submit">Save</button></div></form></div></dialog>
-  <dialog id="google-dialog" class="app-dialog google-dialog"><div class="dialog-shell"><div class="dialog-heading"><div><p class="eyebrow">PRIVATE GOOGLE CONNECTION</p><h2>Connect your sheet</h2></div><button class="icon-button" id="google-dialog-close" aria-label="Close dialog">×</button></div><p class="google-intro">Update the Google Sheet used by this stockroom.</p><div class="google-access-note"><span>ⓘ</span><span>OAuth tokens remain on the local server and are not sent to the browser. Workbook data is loaded from and saved directly to Google Sheets.</span></div><form id="google-settings-form" class="google-settings"><div class="form-field"><label for="google-sheet-id">Google Sheet link or ID</label><input id="google-sheet-id" name="sheetId" type="text" required></div><a class="button button-secondary google-download hidden" id="download-google-sheet" target="_blank" rel="noopener noreferrer">↓ Download workbook (.xlsx)</a><p class="google-download-note">Downloads the full workbook, including its tabs and formatting. Google may ask you to sign in.</p><div class="google-setup-help">If you want a private sheet, set its Google Sheets general access to <strong>Restricted</strong>.</div><button class="button button-secondary google-save" type="submit">Save sheet link</button></form><div id="google-login-error" class="form-error hidden" role="alert"></div><div class="dialog-actions google-actions"><button type="button" class="button button-secondary" id="google-cancel">Cancel</button><button type="button" class="button button-primary" id="google-sign-in">Sign in with another account</button></div></div></dialog>
+  <dialog id="google-dialog" class="app-dialog google-dialog"><div class="dialog-shell"><div class="dialog-heading"><div><p class="eyebrow">PRIVATE GOOGLE CONNECTION</p><h2>Connect your sheet</h2></div><button class="icon-button" id="google-dialog-close" aria-label="Close dialog">×</button></div><p class="google-intro">Update the Google Sheet used by this stockroom.</p><div class="google-access-note"><span>ⓘ</span><span>OAuth tokens remain on the local server and are not sent to the browser. Workbook data is loaded from and saved directly to Google Sheets.</span></div><form id="google-settings-form" class="google-settings"><div class="form-field"><label for="google-sheet-id">Google Sheet link or ID</label><input id="google-sheet-id" name="sheetId" type="text" required></div><a class="button button-secondary google-download" id="download-google-sheet" href="https://docs.google.com/spreadsheets/d/1u8NiibBqrxEmq9dUB7R7kJMqNVE5lYOYV2bhLb8tRYc/export?format=xlsx" target="_blank" rel="noopener noreferrer">↓ Download workbook (.xlsx)</a><p class="google-download-note">Downloads the full workbook, including its tabs and formatting. Google may ask you to sign in.</p><div class="google-setup-help">If you want a private sheet, set its Google Sheets general access to <strong>Restricted</strong>.</div><button class="button button-secondary google-save" type="submit">Save sheet link</button></form><div id="google-login-error" class="form-error hidden" role="alert"></div><div class="dialog-actions google-actions"><button type="button" class="button button-secondary" id="google-cancel">Cancel</button><button type="button" class="button button-primary" id="google-sign-in">Sign in with another account</button></div></div></dialog>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="app.js"></script>
+  <script src="app.js?v=stocknest-ledger-pages"></script>
 </body>
 </html>
