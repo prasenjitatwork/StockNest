@@ -35,18 +35,11 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .signed-in-notice .note-dot { grid-row: span 2; margin: 0; }
 .signed-in-notice strong { display: block; margin-top: 3px; color: #435b48; font-size: 10px; }
 .field-help { color: #999f96; font-size: 9px; line-height: 1.5; }
-.login-warning { display: flex; gap: 9px; padding: 11px; border: 1px solid #f0e6cf; border-radius: 8px; background: #fbf7ec; color: #786c50; font-size: 9px; line-height: 1.65; }
-.login-warning > span:first-child { flex: none; }
-.login-warning strong { color: #4d574b; }
 .login-submit { width: 100%; min-height: 43px; font-size: 11px; }
 .login-submit:disabled { cursor: wait; opacity: .75; }
 .oauth-setup-note { margin: -5px 0 0; color: #927c50; text-align: center; font-size: 9px; line-height: 1.5; }
 .oauth-setup-note code { display: block; margin-top: 4px; color: #3c6d53; overflow-wrap: anywhere; }
 .login-google-g { width: 23px; height: 23px; border: 0; border-radius: 6px; background: #fff; font-size: 14px; }
-.login-setup-link { margin: 17px 0 0; color: #858b81; text-align: center; font-size: 9px; }
-.login-setup-link a { color: #3c6d53; font-weight: 700; text-decoration: none; }
-.login-setup-link a:hover { text-decoration: underline; }
-.login-privacy { margin: 19px 0 0; padding-top: 13px; border-top: 1px solid #f0f0eb; color: #a0a49c; text-align: center; font-size: 8px; }
 .app-shell { min-height: 100vh; }
 .sidebar { position: fixed; inset: 0 auto 0 0; z-index: 5; display: flex; width: 248px; flex-direction: column; padding: 25px 17px 17px; background: #fff; border-right: 1px solid #eeeee8; }
 .brand { display: flex; align-items: center; gap: 11px; padding: 0 9px; color: inherit; text-decoration: none; }
@@ -349,10 +342,8 @@ tbody tr:last-child td { border-bottom: 0; }
 :root[data-theme="dark"] .sidebar-note,
 :root[data-theme="dark"] .google-setup-help { border-color: #343434; background: #222; }
 :root[data-theme="dark"] .signed-in-notice,
-:root[data-theme="dark"] .login-warning,
 :root[data-theme="dark"] .google-access-note { border-color: #3a3a3a; background: #252525; color: #d0d0d0; }
 :root[data-theme="dark"] .google-setup-help strong,
-:root[data-theme="dark"] .login-warning strong,
 :root[data-theme="dark"] .signed-in-notice strong { color: #ededed; }
 :root[data-theme="dark"] .payout-report-table .report-total-row td { border-top-color: #444; }
 :root[data-theme="dark"] .app-dialog::backdrop { background: #000b; }

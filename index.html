@@ -19,12 +19,10 @@
         <img class="brand-mark" src="assets/stocknest-mark.png" alt="">
         <span class="brand-copy"><strong>StockNest</strong><small>INVENTORY</small></span>
       </a>
-      <div class="login-copy"><p class="eyebrow">YOUR PRIVATE STOCKROOM</p><h1>Sign in to <span>your kitchen.</span></h1><p>Sign in with the Google account that can edit your inventory sheet. All inventory and finance data loads from and saves to that sheet.</p></div>
+      <div class="login-copy"><p class="eyebrow">YOUR PRIVATE STOCKROOM</p><h1>Welcome to <span>StockNest.</span></h1><p>Sign in with Google to manage your inventory.</p></div>
       <div class="login-form" id="login-step-signin">
-        <div class="login-warning"><span>🔒</span><span>Google asks you to authorize this app to read and edit Sheets you can access. Your sheet is not shared with another person. If its link is public, change Google Sheets sharing to <strong>Restricted</strong>.</span></div>
         <div id="login-error" class="form-error hidden" role="alert"></div>
         <button class="button button-primary login-submit" type="button" id="login-google-button"><span class="google-g login-google-g">G</span> Sign in with Google</button>
-        <p id="hosted-oauth-help" class="oauth-setup-note hidden">If Google reports <strong>redirect_uri_mismatch</strong>, add this exact authorized redirect URI in Google Cloud: <code></code></p>
         <p id="oauth-setup-note" class="oauth-setup-note hidden">Google sign-in needs an OAuth client configured for this app.</p>
       </div>
       <form id="google-sheet-form" class="google-sheet-step hidden">
@@ -33,8 +31,6 @@
         <div id="sheet-link-error" class="form-error hidden" role="alert"></div>
         <button class="button button-primary login-submit" type="submit" id="load-google-sheet-button">Open my sheet</button>
       </form>
-      <p class="login-setup-link">Need an OAuth client ID? <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noreferrer">Set it up in Google Cloud ↗</a></p>
-      <p class="login-privacy">Your sign-in lasts up to one day. Workbook data stays in Google Sheets, not this browser.</p>
     </div>
   </section>
   <div class="app-shell hidden">
@@ -206,6 +202,6 @@
   <dialog id="app-dialog" class="app-dialog"><div class="dialog-shell"><div class="dialog-heading"><div><p class="eyebrow" id="dialog-eyebrow"></p><h2 id="dialog-title"></h2></div><button class="icon-button" id="dialog-close" aria-label="Close dialog">×</button></div><form id="dialog-form"><div id="dialog-fields" class="form-grid"></div><div id="dialog-error" class="form-error hidden"></div><div class="dialog-actions"><button type="button" class="button button-secondary" id="dialog-cancel">Cancel</button><button type="submit" class="button button-primary" id="dialog-submit">Save</button></div></form></div></dialog>
   <dialog id="google-dialog" class="app-dialog google-dialog"><div class="dialog-shell"><div class="dialog-heading"><div><p class="eyebrow">PRIVATE GOOGLE CONNECTION</p><h2>Connect your sheet</h2></div><button class="icon-button" id="google-dialog-close" aria-label="Close dialog">×</button></div><p class="google-intro">Update the Google Sheet used by this stockroom.</p><div class="google-access-note"><span>ⓘ</span><span>OAuth tokens remain on the local server and are not sent to the browser. Workbook data is loaded from and saved directly to Google Sheets.</span></div><form id="google-settings-form" class="google-settings"><div class="form-field"><label for="google-sheet-id">Google Sheet link or ID</label><input id="google-sheet-id" name="sheetId" type="text" required></div><a class="button button-secondary google-download" id="download-google-sheet" href="https://docs.google.com/spreadsheets/d/1u8NiibBqrxEmq9dUB7R7kJMqNVE5lYOYV2bhLb8tRYc/export?format=xlsx" target="_blank" rel="noopener noreferrer">↓ Download workbook (.xlsx)</a><p class="google-download-note">Downloads the full workbook, including its tabs and formatting. Google may ask you to sign in.</p><div class="google-setup-help">If you want a private sheet, set its Google Sheets general access to <strong>Restricted</strong>.</div><button class="button button-secondary google-save" type="submit">Save sheet link</button></form><div id="google-login-error" class="form-error hidden" role="alert"></div><div class="dialog-actions google-actions"><button type="button" class="button button-secondary" id="google-cancel">Cancel</button><button type="button" class="button button-primary" id="google-sign-in">Sign in with another account</button></div></div></dialog>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="app.js?v=stocknest-expense-dropdowns"></script>
+  <script src="app.js?v=stocknest-simple-login"></script>
 </body>
 </html>

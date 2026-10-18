@@ -1428,8 +1428,6 @@
   });
   get("login-sheet-id").value = googleSettings.sheetId;
   updateThemeToggle(savedTheme);
-  get("hosted-oauth-help").classList.toggle("hidden", isLocalServer);
-  get("hosted-oauth-help").querySelector("code").textContent = `${window.location.origin}/oauth-callback.php`;
   updateConnectionUI(false);
   showLoginPage(true);
   const authError = new URLSearchParams(window.location.search).get("auth_error");
