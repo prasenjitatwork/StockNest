@@ -25,7 +25,7 @@ function finish_oauth_popup(string $baseUrl, ?string $error = null)
     header('Content-Type: text/html; charset=utf-8');
     echo '<!doctype html><meta charset="utf-8"><title>Google sign-in</title><p>Sign-in complete. You may close this window.</p><script>'
         . 'const appOrigin=' . $origin . ';'
-        . 'if(window.opener&&!window.opener.closed){window.opener.postMessage({type:"yum-box-oauth",error:' . $message . '},appOrigin);window.close();}'
+        . 'if(window.opener&&!window.opener.closed){window.opener.postMessage({type:"stocknest-oauth",error:' . $message . '},appOrigin);window.close();}'
         . 'else{window.location.replace(' . $fallback . ');}'
         . '</script>';
     exit;
@@ -408,7 +408,7 @@ try {
 
     respond_json(404, ['error' => ['message' => 'API route not found.']]);
 } catch (Throwable $error) {
-    error_log('Aaravi Yum Box API error: ' . $error->getMessage());
+    error_log('StockNest API error: ' . $error->getMessage());
     if (($route ?? '') === 'oauth/callback') {
         if (!empty($_SESSION['oauth_popup']) && isset($config['base_url'])) {
             unset($_SESSION['oauth_popup']);

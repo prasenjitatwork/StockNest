@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f8f7f3">
-  <title>Aaravi's Yum Box | Stockroom</title>
+  <title>StockNest | Inventory Management</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -13,9 +13,9 @@
 <body>
   <section class="login-page" id="google-login-page">
     <div class="login-card">
-      <a class="brand login-brand" href="#" aria-label="Aaravi's Yum Box">
-        <span class="brand-mark">YB</span>
-        <span class="brand-copy"><strong>Aaravi's Yum Box</strong><small>STOCKROOM</small></span>
+      <a class="brand login-brand" href="#" aria-label="StockNest">
+        <img class="brand-mark" src="assets/stocknest-mark.png" alt="">
+        <span class="brand-copy"><strong>StockNest</strong><small>INVENTORY</small></span>
       </a>
       <div class="login-copy"><p class="eyebrow">YOUR PRIVATE STOCKROOM</p><h1>Sign in to <span>your kitchen.</span></h1><p>Sign in with the Google account that can edit your inventory sheet. All inventory and finance data loads from and saves to that sheet.</p></div>
       <div class="login-form" id="login-step-signin">
@@ -37,9 +37,9 @@
   </section>
   <div class="app-shell hidden">
     <aside class="sidebar">
-      <a class="brand" href="#" aria-label="Aaravi's Yum Box home">
-        <span class="brand-mark">YB</span>
-        <span class="brand-copy"><strong>Aaravi's Yum Box</strong><small>STOCKROOM</small></span>
+      <a class="brand" href="#" aria-label="StockNest home">
+        <img class="brand-mark" src="assets/stocknest-mark.png" alt="">
+        <span class="brand-copy"><strong>StockNest</strong><small>INVENTORY</small></span>
       </a>
       <div class="nav-label">WORKSPACE</div>
       <nav class="primary-nav" aria-label="Main navigation">
@@ -52,13 +52,13 @@
         <button id="connect-google" class="google-connect"><span class="google-g">G</span><span><strong id="google-connection-label">Connect Google Sheet</strong><small id="google-connection-detail">Sign in to sync this workbook</small></span><span class="connect-arrow">→</span></button>
         <div class="sidebar-note"><span class="note-dot"></span><span><strong>Private to your account</strong><small>Google access is authorized by you</small></span></div>
         <button id="logout-button" class="sidebar-action">↪ <span>Log out</span></button>
-        <div class="profile"><span class="avatar">AY</span><span><strong>Aaravi's kitchen</strong><small>Inventory manager</small></span></div>
+        <div class="profile"><span class="avatar">SN</span><span><strong>StockNest</strong><small>Inventory manager</small></span></div>
       </div>
     </aside>
 
     <main class="main-content">
       <header class="topbar">
-        <div class="mobile-brand"><span class="brand-mark">YB</span><strong>Aaravi's Yum Box</strong></div>
+        <div class="mobile-brand"><img class="brand-mark" src="assets/stocknest-mark.png" alt=""><strong>StockNest</strong></div>
         <div class="breadcrumb"><span>Workspace</span><span class="breadcrumb-slash">/</span><strong id="breadcrumb-current">Overview</strong></div>
         <div class="topbar-right"><time class="today-label" id="today-label"></time><button class="button button-secondary theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark theme" title="Switch to dark theme"><span id="theme-toggle-icon" aria-hidden="true">◐</span><span id="theme-toggle-label">Dark mode</span></button><button class="button button-secondary google-top-button" id="google-top-button">↗ <span>Connect sheet</span></button><button class="button button-primary top-add" id="quick-add">＋ <span>Record purchase</span></button></div>
       </header>

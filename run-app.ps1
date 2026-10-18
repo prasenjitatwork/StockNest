@@ -32,6 +32,7 @@ $contentTypes = @{
     ".css" = "text/css; charset=utf-8"
     ".svg" = "image/svg+xml"
     ".ico" = "image/x-icon"
+    ".png" = "image/png"
 }
 
 function Send-Json($Response, [int]$StatusCode, $Value) {
@@ -120,7 +121,7 @@ function Get-UpstreamError($ErrorRecord) {
 
 try {
     $listener.Start()
-    Write-Host "Aaravi's Yum Box is running at http://localhost:8765/"
+    Write-Host "StockNest is running at http://localhost:8765/"
     Write-Host "Google refresh tokens stay in this server process, never in the browser."
     Write-Host "Keep this PowerShell window open while using the app. Press Ctrl+C to stop."
 

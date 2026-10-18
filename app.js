@@ -1,12 +1,20 @@
 (function () {
   "use strict";
 
-  const GOOGLE_SETTINGS_KEY = "aaravis-yum-box-google-settings-v1";
-  const THEME_KEY = "aaravis-yum-box-theme-v1";
-  const savedTheme = localStorage.getItem(THEME_KEY) === "dark" ? "dark" : "light";
+  const GOOGLE_SETTINGS_KEY = "stocknest-google-settings-v1";
+  const THEME_KEY = "stocknest-theme-v1";
+  const storedSetting = (key, legacyKey) => {
+    const current = localStorage.getItem(key);
+    if (current !== null) return current;
+    const legacy = localStorage.getItem(legacyKey);
+    if (legacy !== null) localStorage.setItem(key, legacy);
+    return legacy;
+  };
+  const savedGoogleSettings = storedSetting(GOOGLE_SETTINGS_KEY, "aaravis-yum-box-google-settings-v1");
+  const savedTheme = storedSetting(THEME_KEY, "aaravis-yum-box-theme-v1") === "dark" ? "dark" : "light";
   document.documentElement.dataset.theme = savedTheme;
   const clone = (value) => JSON.parse(JSON.stringify(value));
-  const hasSavedSheet = Boolean(localStorage.getItem(GOOGLE_SETTINGS_KEY));
+  const hasSavedSheet = Boolean(savedGoogleSettings);
   const isLocalServer = ["localhost", "127.0.0.1"].includes(window.location.hostname);
   const apiUrl = (route) => isLocalServer
     ? `/api/${route}`
@@ -14,7 +22,7 @@
   let state = null;
   let googleSettings = { sheetId: "" };
   try {
-    googleSettings = { ...googleSettings, ...JSON.parse(localStorage.getItem(GOOGLE_SETTINGS_KEY) || "{}") };
+    googleSettings = { ...googleSettings, ...JSON.parse(savedGoogleSettings || "{}") };
   } catch (error) {
     console.error("Saved Google connection settings could not be loaded.", error);
   }
@@ -138,7 +146,7 @@
 
     const popup = window.open(
       `${apiUrl("auth/login")}&popup=1`,
-      "yum-box-google-login",
+      "stocknest-google-login",
       "popup,width=520,height=680,resizable=yes,scrollbars=yes"
     );
     if (!popup) {
@@ -1248,7 +1256,7 @@
   window.addEventListener("message", (event) => {
     if (event.origin !== window.location.origin
       || event.source !== googleLoginPopup
-      || event.data?.type !== "yum-box-oauth") return;
+      || event.data?.type !== "stocknest-oauth") return;
     googleLoginPopup = null;
     if (event.data.error) {
       updateLoginError(event.data.error);
